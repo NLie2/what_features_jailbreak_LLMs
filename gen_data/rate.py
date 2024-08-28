@@ -10,7 +10,7 @@ load_dotenv()
 HF_TOKEN = os.getenv("HF_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-def rate_with_harmbench(dataset_name, model_name, df, add_info="", jailbreak_cutoff=0, save_interval=10):
+def rate_with_strongREJECT(dataset_name, model_name, df, add_info="", jailbreak_cutoff=0, save_interval=10):
     # Filter all responses that have the word "harmful" in the datatype column
     harmful_responses = df[df['data_type'].str.contains('harmful')].copy()
 

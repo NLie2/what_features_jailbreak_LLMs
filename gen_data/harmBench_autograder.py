@@ -51,9 +51,6 @@ Answer: [/INST]''',
 
 
 def grade_with_HF(behavior, generations,  cls, tokenizer, context = None):
-
-  
-  
   if context:
     inputs = [LLAMA2_CLS_PROMPT['prompt_contextual'].format(behavior=behavior, generation=g, context=context) for g in generations]
   else:
