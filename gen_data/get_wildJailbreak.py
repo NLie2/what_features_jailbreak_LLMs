@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 import pickle
 import sys
 
-
 # Ensure environment variables are loaded
 load_dotenv()
 
@@ -17,22 +16,11 @@ sys.path.append(repo_path)
 from strongreject.strongreject_evaluator import run_autograder_on_dataset, autograde_response
 
 from .get_activations import get_model, get_res_activations
+from .helper import save_with_timestamp
 
 HF_TOKEN = os.getenv("HF_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-
-def save_with_timestamp(model_name, dataset_name, df, add_info = ""): 
-    
-    now = datetime.now().strftime("%d%m%Y%H:%M:%S")
-
-    model_name = model_name.replace("/","")
-    dataset_name = dataset_name.replace("/","")
-
-    save_path = f"datasets/{dataset_name}_{model_name}_{add_info}_{now}.pkl"
-    with open(save_path, 'wb') as f:
-        pickle.dump(df, f)
-    return save_path
 
 def load_dataset_with_activations(model_name, n_rows, n_start = 0, token_position = "all", dataset_name="allenai/wildjailbreak", only_harmful = False, rate=False, generate_output=False, jailbreak_cutoff=0): 
     # get model 
@@ -60,26 +48,27 @@ def load_dataset_with_activations(model_name, n_rows, n_start = 0, token_positio
     df['response'] = None
     df['res_activations'] = None
     
-
+    counter = 0
     for row in df.iterrows():
         index = row[0]
+        counter +=1 
 
-        print(f"Processing prompt {index + 1}/{n_rows}")
+        print(f"Processing prompt {counter + 1}/{n_rows}")
     
         adv_prompt = row[1]["forbidden_prompt"]
 
         output_activations = get_res_activations(model = model, tokenizer = tokenizer, token_position = token_position, prompt = adv_prompt, generate_output=generate_output)
 
         if generate_output:
-          print(output_activations["output"])
-          df.at[index, 'response'] = output_activations['output']
+          print(output_activations["output_text"])
+          df.at[index, 'response'] = output_activations['output_text']
 
         df.at[index, 'res_activations'] = output_activations['res_activations']
 
     print("Processing complete")
     
-    if not rate: 
-      return save_with_timestamp(model_name, dataset_name, df)
+    if not rate:
+      return save_with_timestamp(model_name = model_name, dataset_name = dataset_name, save=True, df=df)
 
     # Filter all responses that have the word "harmful" in the datatype column
     harmful_responses = df[df['data_type'].str.contains('harmful')].copy()
@@ -100,7 +89,7 @@ def load_dataset_with_activations(model_name, n_rows, n_start = 0, token_positio
     return save_with_timestamp(model_name, dataset_name, df)
 
 
-def get_activations_from_df(model_name, df, prompt_column, n_rows, n_start = 0,  dataset_name =  "allenai/wildjailbreak", token_position = "all", type_of_activations = "response_res_activations"): 
+def get_activations_from_df(model_name, df, prompt_column, n_rows= None, n_start = 0,  dataset_name =  "allenai/wildjailbreak", token_position = "all", generate_output = False, type_of_activations = "res_activations"): 
     # get model 
     model, tokenizer = get_model(model_name)
 
@@ -110,18 +99,22 @@ def get_activations_from_df(model_name, df, prompt_column, n_rows, n_start = 0, 
     
     counter = 0 
 
-    for row in df.iterrows():
+    if n_rows == None: 
+        n_rows = len(df) 
+    for row in df.iloc[:n_rows].iterrows():
         counter+=1 
         index = row[0]
         print(f"Processing prompt {counter + 1}/{n_rows}")
     
         prompt = row[1][prompt_column]
 
-        output_activations = get_res_activations(model = model, tokenizer = tokenizer, token_position = token_position, prompt = prompt)
+        output_activations = get_res_activations(model = model, tokenizer = tokenizer, token_position = token_position, prompt = prompt, type_of_activations=type_of_activations, generate_output=generate_output)
         
-        df.at[index, type_of_activations] = output_activations['res_activations']
+        df.at[index, type_of_activations] = output_activations[type_of_activations]
+        
+        if generate_output: df.at[index, 'output_text'] = output_activations['output_text']
 
     print("Processing complete")
     
-    return save_with_timestamp(model_name, dataset_name, df, add_info = type_of_activations)
+    return save_with_timestamp(model_name=model_name, dataset_name=dataset_name, save = True, df=df, add_info = type_of_activations)
 

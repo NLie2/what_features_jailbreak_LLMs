@@ -1,0 +1,9 @@
+
+CondaError: Run 'conda init' before 'conda activate'
+
+Traceback (most recent call last):
+  File "/data/nathalie_maria_kirch/ERA_Fellowship/experiments/nathaly/get_prompt_activations_wei_dataset.py", line 6, in <module>
+    from gen_data.get_wildJailbreak import get_activations_from_df
+  File "/data/nathalie_maria_kirch/ERA_Fellowship/gen_data/get_wildJailbreak.py", line 1, in <module>
+    from datasets import load_dataset
+ImportError: cannot import name 'load_dataset' from 'datasets' (unknown location)

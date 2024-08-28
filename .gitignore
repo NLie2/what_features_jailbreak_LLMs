@@ -2,3 +2,11 @@
 *.env
 *.pkl
 *.csv
+*.txt
+*.png
+*.pdf
+gen_data/__pycache__/
+analysis/sweep/wandb
+analysis/__pycache__
+analysis/sweep/__pycache__
+analysis/sweep/logs

@@ -34,9 +34,9 @@ def get_res_layers_to_enumerate(model):
 def get_res_activations(model, 
                     tokenizer,  
                     prompt,
+                    type_of_activations = "res_activations", 
                     token_position = "all",
-                    generate_output = False,
-                    n_samples: int = 1):
+                    generate_output = False):
     """ Returns a torch.Tensor of activations. 
 
     activations.shape = torch.Size([batch, seq, num_hidden_layers, hidden_size])
@@ -60,9 +60,9 @@ def get_res_activations(model,
               # n tokens in each sequence
               # hidden size of res stream
             if token_position == "all": 
+                #output[0] += model._coef[0] # use normalized
+                #return output
                 activations[name].append(output[0][:, :, :].detach().cpu())
-            elif token_position == "last_of_prompt": 
-              activations[name].append(output[0][:, len_prompt-1, :].detach().cpu())
             elif token_position == "last":
               activations[name].append(output[0][:, -1, :].detach().cpu())
             else: 
@@ -91,14 +91,19 @@ def get_res_activations(model,
 
     if generate_output:
       # also add model.generate and save the output 
-      output_sequences = model.generate(input_ids, num_return_sequences=n_samples, max_new_tokens=200, do_sample=True)
+      
+      # set do_sample to True for stochastic output
+      output_sequence = model.generate(input_ids, num_return_sequences=1, max_new_tokens=200, do_sample=False)
+      
+      generated_text = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
+      
+      # Check if the generated text starts with the input prompt
+      if generated_text.startswith(prompt): generated_text = generated_text[len(prompt):].strip()
 
-      # translate output to words 
-      generated_text = [tokenizer.decode(output_sequence, skip_special_tokens=True) for output_sequence in output_sequences]
 
-      return {'output': generated_text, 'res_activations': activations}
+      return {'output_text': generated_text, type_of_activations : activations}
     
-    return {'res_activations': activations}
+    return {type_of_activations : activations}
 
 
 
