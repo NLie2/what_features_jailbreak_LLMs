@@ -20,8 +20,7 @@ def get_response(model,
             print(output[0].shape)
             print("len", len(probe.coef_[0])) # use normalized
             print(probe.coef_[0])
-            output[0][:, :, :] -= probe.coef_[0]
-            print("test")
+            output[0][:, :, :] += probe.coef_[0]
             return output
         return hook
 
