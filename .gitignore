@@ -5,8 +5,12 @@
 *.txt
 *.png
 *.pdf
+*.yaml
+images/
 gen_data/__pycache__/
 analysis/sweep/wandb
 analysis/__pycache__
 analysis/sweep/__pycache__
 analysis/sweep/logs
+analysis/sweep_probe_creation
+analysis/sweep_probe_intervention

@@ -1,0 +1,7 @@
+
+CondaError: Run 'conda init' before 'conda activate'
+
+Traceback (most recent call last):
+  File "/data/nathalie_maria_kirch/ERA_Fellowship/experiments/../gen_data/wei_dataset/rate_dataset.py", line 12, in <module>
+    from gen_data.harmBench_autograder import grade_with_HF
+ModuleNotFoundError: No module named 'gen_data'

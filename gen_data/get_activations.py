@@ -27,6 +27,8 @@ def get_res_layers_to_enumerate(model):
         return model.model.layers
     elif 'gemma' in model_name:
         return model.model.layers
+    elif "llama" in model_name:
+        return model.model.layers
     else:
       raise ValueError(f"Unsupported model: {model_name}.")
 
@@ -41,7 +43,7 @@ def get_res_activations(model,
 
     activations.shape = torch.Size([batch, seq, num_hidden_layers, hidden_size])
 
-    token_position = "last_of_prompt" | "last | "all" (default = "all")
+    token_position = "last | "all" (default = "all")
     """
 
     device = next(model.parameters()).device
@@ -60,8 +62,6 @@ def get_res_activations(model,
               # n tokens in each sequence
               # hidden size of res stream
             if token_position == "all": 
-                #output[0] += model._coef[0] # use normalized
-                #return output
                 activations[name].append(output[0][:, :, :].detach().cpu())
             elif token_position == "last":
               activations[name].append(output[0][:, -1, :].detach().cpu())

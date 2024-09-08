@@ -20,36 +20,37 @@ print(data['jailbreak_prompt_name'].unique())
 print(data['prompt_name'].unique())
 
 
-model_name = "google/gemma-7b-it"
+model_name = "meta-llama/Meta-Llama-3-8B-Instruct"
 dataset_name = "wei_dataset"
 
 
 
-# path = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
-
-# print(path)
-
-total_length = len(data)
-quartile_1, quartile_2, quartile_3 = total_length//4, total_length//2, 3*total_length//4
-data_quartile_1 = data[:quartile_1]
-data_quartile_2 = data[quartile_1:quartile_2]
-data_quartile_3 = data[quartile_2:quartile_3]
-data_quartile_4 = data[quartile_3:]
-
-
-path = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_1, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
+path = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
 
 print(path)
 
-path = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_2, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
+# total_length = len(data)
+# quartile_1, quartile_2, quartile_3 = total_length//4, total_length//2, 3*total_length//4
+# data_quartile_1 = data[:quartile_1]
+# data_quartile_2 = data[quartile_1:quartile_2]
+# data_quartile_3 = data[quartile_2:quartile_3]
+# data_quartile_4 = data[quartile_3:]
 
-print(path)
 
-path = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_3, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
+# path_1 = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_1, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
 
-print(path)
+# print(path_1)
 
-path = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_4, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
+# path_2 = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_2, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
 
-print(path)
+# print(path_2)
+
+# path_3 = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_3, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
+
+# print(path_3)
+
+# path_4 = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_4, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
+
+# print(path_4)
+
 
