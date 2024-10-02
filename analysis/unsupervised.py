@@ -10,10 +10,15 @@ from sklearn.decomposition import PCA
 from collections import defaultdict
 from adjustText import adjust_text
 
+fontsize1 = 34
+fontsize2 = 24
+fontsize3 = 30
 
 def visualize_act_with_t_sne(model_name, tensors_flat, labels, dataset_name, num_samples, layer, perplexity=30, scores=None, save=False):
     # Apply t-SNE
     print("t-SNE visualization of the weights of the residual stream of the model")
+    
+    # labels = [label.replace("_", " ").title().replace("cg", "CG") for label in labels]
     tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42)
     print("Fitting t-SNE...", [tensor for tensor in tensors_flat])
 
@@ -30,6 +35,7 @@ def visualize_act_with_t_sne(model_name, tensors_flat, labels, dataset_name, num
 
     # Create a color map
     unique_labels = np.unique(labels)
+    
     colors = cm.get_cmap('tab20', len(unique_labels))  # Use 'tab20' or 'Dark2' colormap for distinct, non-pastel colors
     color_map = {label: colors(i) for i, label in enumerate(unique_labels)}
 
@@ -38,6 +44,7 @@ def visualize_act_with_t_sne(model_name, tensors_flat, labels, dataset_name, num
 
     # Plot each label category with a different color and annotate labels
     for label in unique_labels:
+
         indices = np.where(labels == label)[0]
         
         plt.scatter(tensors_tsne[indices, 0], tensors_tsne[indices, 1], color=color_map[label], alpha=0.6, s=100, label=label)
@@ -47,24 +54,29 @@ def visualize_act_with_t_sne(model_name, tensors_flat, labels, dataset_name, num
         mean_y = np.mean(tensors_tsne[indices, 1])
 
         # Store the text object for adjustment
-        text = plt.text(mean_x, mean_y, str(label), fontsize=12, ha='center', va='center',
+        text = plt.text(mean_x, mean_y, str(label), fontsize=fontsize2, ha='center', va='center',
                         bbox=dict(facecolor='white', alpha=0.5, edgecolor='none', pad=1))
         texts.append(text)
 
     # Adjust text to avoid overlap
     adjust_text(texts, only_move={'points': 'y', 'text': 'y'}, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
 
-    plt.title(f"t-SNE Visualization of Residual Stream Weights, model={model_name}, layer={layer}, num_samples={num_samples}, perplexity={perplexity}")
-    plt.xlabel("t-SNE Component 1")
-    plt.ylabel("t-SNE Component 2")
-    plt.figtext(0.5, 0.01, f"Dataset: {dataset_name}", ha='center', fontsize=10, style='italic')
+    # plt.title(f"t-SNE Visualization of Residual Stream Weights, model={model_name}, layer={layer}, num_samples={num_samples}, perplexity={perplexity}")
+    plt.xlabel("T-SNE Component 1", fontsize=fontsize2)  # Increased fontsize
+    plt.ylabel("T-SNE Component 2", fontsize=fontsize2)  # Increased fontsize
+    plt.figtext(0.5, 0.01, f"{model_name.replace("-", " ").title()} (Layer {layer})", ha='center', fontsize=fontsize1, style='italic')
+    
+    #remove x_ticks
+    plt.xticks([])
+    plt.yticks([])
+    
+    plt.tight_layout(pad=5.0)
 
     if save:
-        now = datetime.datetime.now().strftime("%d%m%Y%H:%M:%S")
-        save_fig_path = f'tsne_visualization_{dataset_name}_{now}.pdf'.replace('/', '_')
+        save_fig_path = f'/data/nathalie_maria_kirch/ERA_Fellowship/images/clustering/tsne_visualization_{dataset_name.replace('/', '_')}_{model_name.replace('/', '_')}.pdf'
         plt.savefig(save_fig_path, bbox_inches='tight')  # Save the figure with labels directly on the plot
-
-    plt.show()
+   
+    return plt
     
 # def visualize_act_with_t_sne(model_name, tensors_flat, labels, dataset_name, num_samples, layer, perplexity =30, scores=None, save = False):
 #   # Apply t-SNE

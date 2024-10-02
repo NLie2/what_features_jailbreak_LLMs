@@ -1,4 +1,0 @@
-
-CondaError: Run 'conda init' before 'conda activate'
-
-python: can't open file '/data/nathalie_maria_kirch/ERA_Fellowship/experiments/nathaly/get_activations_len8000.py': [Errno 2] No such file or directory

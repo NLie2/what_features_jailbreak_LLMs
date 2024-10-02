@@ -1,4 +1,5 @@
 *.ipynb
+!mlp_intervention.ipynb
 *.env
 *.pkl
 *.csv
@@ -14,3 +15,7 @@ analysis/sweep/__pycache__
 analysis/sweep/logs
 analysis/sweep_probe_creation
 analysis/sweep_probe_intervention
+analysis/sweep_mlp_intervention
+analysis/check_asrs
+analysis/figure_generation
+logs/

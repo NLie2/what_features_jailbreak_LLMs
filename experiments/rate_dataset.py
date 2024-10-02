@@ -32,6 +32,8 @@ def main(input_path, output_path):
     # Load the dataframe from the input path
     df = pd.read_pickle(input_path)
     
+    df.rename(columns={"jailbreak_prompt_text" : "original_prompt_text", "MLP_intervention_response": "output_text", "linear_intervention_response": "output_text", "control_no_intervention_response": "output_text"}, inplace=True)
+    
     # Load the HarmBench model
     model_name = "cais/HarmBench-Llama-2-13b-cls"
     model = AutoModelForCausalLM.from_pretrained(model_name)
@@ -46,7 +48,7 @@ def main(input_path, output_path):
 
 
     # Apply the grading function and add the ratings column
-    df["rating"] = df.apply(lambda row: grade_with_HF(row['original_prompt_text'], [row['output_text']], model, tokenizer)[0], axis=1)
+    df["rating"] = df.apply(lambda row: grade_with_HF(row['original_prompt_text'], [row['output_text']], model, tokenizer, verbose = True)[0], axis=1)
 
     # Save the dataframe to the output path
     df.to_pickle(output_path)
@@ -57,7 +59,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a dataframe and grade the prompts.")
     parser.add_argument("input_path", type=str, help="Path to the input pickle file")
     parser.add_argument("output_path", type=str, help="Path to save the output pickle file")
-
+  
     args = parser.parse_args()
 
     # Run the main function with the provided arguments

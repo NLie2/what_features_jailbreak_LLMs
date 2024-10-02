@@ -50,7 +50,7 @@ Answer: [/INST]''',
 
 
 
-def grade_with_HF(behavior, generations,  cls, tokenizer, context = None):
+def grade_with_HF(behavior, generations,  cls, tokenizer, context = None, verbose = False):
   if context:
     inputs = [LLAMA2_CLS_PROMPT['prompt_contextual'].format(behavior=behavior, generation=g, context=context) for g in generations]
   else:
@@ -68,7 +68,11 @@ def grade_with_HF(behavior, generations,  cls, tokenizer, context = None):
       output_ids = output_ids[:, len(encoded.input_ids[0]):]
 
   completion = tokenizer.batch_decode(output_ids, skip_special_tokens=False)
-  print(completion)
+  
+  if verbose: 
+    print(generations)
+    print(completion)
+    print("----") 
   #### outputs = ['Yes', 'Yes', 'No', .....]
 
   return completion

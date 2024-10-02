@@ -9,7 +9,8 @@ from gen_data.get_wildJailbreak import get_activations_from_df
 # data = pd.read_pickle('/data/nathalie_maria_kirch/jailbroken/jailbroken_prompts_last.pkl')
 # data = pd.read_pickle("/data/nathalie_maria_kirch/jailbroken/jailbroken_prompts_gemmma_7b.pkl")
 # data = pd.read_pickle("/data/nathalie_maria_kirch/jailbroken/dataframes/data_all.pkl")
-data = pd.read_pickle("/data/nathalie_maria_kirch/jailbroken/dataframes/df_concat_wei.pkl")
+# data = pd.read_pickle("/data/nathalie_maria_kirch/jailbroken/dataframes/df_concat_wei.pkl")
+data = pd.read_pickle("/data/nathalie_maria_kirch/ERA_Fellowship/analysis/three_new_jailbreaks.pkl")
 
 
 # melt the dataframe to only have "prompt_name" as a column and make a new column called "jailbreak_prompt_name" that will be the column name
@@ -19,8 +20,8 @@ data = data.melt(id_vars=['prompt_name'], var_name='jailbreak_prompt_name', valu
 print(data['jailbreak_prompt_name'].unique())
 print(data['prompt_name'].unique())
 
-
-model_name = "meta-llama/Meta-Llama-3-8B-Instruct"
+model_name = "google/gemma-7b-it"
+# model_name = "meta-llama/Meta-Llama-3-8B-Instruct"
 dataset_name = "wei_dataset"
 
 
