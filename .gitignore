@@ -1,6 +1,5 @@
 *.ipynb
-!mlp_intervention.ipynb
-!EDA.ipynb
+!analysis/notebooks/*.ipynb
 *.env
 *.pkl
 *.csv
