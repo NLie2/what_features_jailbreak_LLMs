@@ -1,5 +1,6 @@
 *.ipynb
 !mlp_intervention.ipynb
+!EDA.ipynb
 *.env
 *.pkl
 *.csv
@@ -7,8 +8,9 @@
 *.png
 *.pdf
 *.yaml
+*.pth
+*__pycache__/
 images/
-gen_data/__pycache__/
 analysis/sweep/wandb
 analysis/__pycache__
 analysis/sweep/__pycache__
@@ -16,6 +18,9 @@ analysis/sweep/logs
 analysis/sweep_probe_creation
 analysis/sweep_probe_intervention
 analysis/sweep_mlp_intervention
+analysis/sweep_capability_test
+analysis/sweep_mlp_c
 analysis/check_asrs
 analysis/figure_generation
 logs/
+datasets/

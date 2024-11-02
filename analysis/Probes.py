@@ -48,14 +48,23 @@ class SimpleMLP(nn.Module):
       # Define an optimizer (e.g., Stochastic Gradient Descent)
       optimizer = optim.SGD(self.parameters(), lr=0.01)
 
-
       for epoch in range(num_epochs):
           # self.train()
           y_pred = self(X_train)
 
-
+          losses = []
+          
           # Compute and print loss
           loss = criterion(y_pred, y_train)
+          losses.append(loss.item())
+          
+          # Calculate accuracy
+          accuracies = []
+          y_pred_class = torch.sigmoid(y_pred).squeeze() > 0.5  # Sigmoid and threshold for binary classification
+          accuracy = accuracy_score(y_train.cpu(), y_pred_class.cpu())  # Calculate accuracy
+          accuracies.append(accuracy)
+          
+          
           #optimizer.zero_grad()  # Zero the gradients
           loss.backward()        # Backward pass: compute gradient of the loss with respect to model parameters
           optimizer.step()       # Update the model parameters
@@ -64,6 +73,7 @@ class SimpleMLP(nn.Module):
               print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
       print("Training complete.")
+      return losses, accuracies
 
 
     def get_accuracy(self, data, labels, split_idx):

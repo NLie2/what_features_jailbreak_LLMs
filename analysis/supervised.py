@@ -143,6 +143,10 @@ def plot_confusion_matrix(accuracy, probe_type, conf_matrix, class_names, datase
     input: conf_matrix (array), class_names (list of str)
     output: None
     '''
+    fontsize1 = 40
+    fontsize2 = 36
+    fontsize3 = 34
+
     plt.figure(figsize=(10, 8))
     
     # Labels for the confusion matrix (0 = no jailbreak, 1 = jailbreak)

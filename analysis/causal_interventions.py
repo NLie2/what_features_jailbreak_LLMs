@@ -558,7 +558,8 @@ def get_response_MLP_logit(model,
                  max_new_tokens=15, 
                  target = 0,
                  towards_target = True,
-                 nr_perturbations=32):
+                 nr_perturbations=32,
+                 learning_rate = 0.1):
     """
     Generates a response from a model with a causal intervention applied to specific layers.
 
@@ -632,8 +633,6 @@ def get_response_MLP_logit(model,
               # Access the gradient of the loss w.r.t. the perturbation
               grad_input = perturbation.grad
 
-              # Define a learning rate
-              learning_rate = 0.01
 
               
               if towards_target: 

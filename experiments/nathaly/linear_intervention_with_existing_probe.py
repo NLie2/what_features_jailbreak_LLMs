@@ -61,7 +61,7 @@ if __name__ == "__main__":
     dataset_path = sys.argv[1]  
     probe_path = sys.argv[2]
     save_path = sys.argv[3]
-    intervention_strength = int(sys.argv[4])
+    intervention_strength = float(sys.argv[4])
     perturb_prompt_or_all = sys.argv[5]
 
 
