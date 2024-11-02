@@ -4,14 +4,13 @@ import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
-sys.path.append('/data/nathalie_maria_kirch/ERA_Fellowship')
 
 from analysis.supervised import *
 from analysis.causal_interventions import *
 from analysis.Probes import SimpleMLP
 
 
-df = pd.read_pickle("/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/wei_dataset_rated.pkl")
+df = pd.read_pickle("/datasets/latest/wei_dataset_rated.pkl")
 
 print("dataset loaded")
 
@@ -65,5 +64,5 @@ for index, row in df.iterrows():
     
     # Save every 10 samples
     if index % 20 == 0:
-        df.to_pickle(f"/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/wei_dataset_with_MLP_intervention_full.pkl")
+        df.to_pickle(f"/datasets/latest/wei_dataset_with_MLP_intervention_full.pkl")
     

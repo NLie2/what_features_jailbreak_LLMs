@@ -1,7 +1,6 @@
 import pandas as pd
 import sys
 
-sys.path.append("/data/nathalie_maria_kirch/ERA_Fellowship")
 
 from gen_data.get_wildJailbreak import get_activations_from_df
 
@@ -10,7 +9,7 @@ from gen_data.get_wildJailbreak import get_activations_from_df
 # data = pd.read_pickle("/data/nathalie_maria_kirch/jailbroken/jailbroken_prompts_gemmma_7b.pkl")
 # data = pd.read_pickle("/data/nathalie_maria_kirch/jailbroken/dataframes/data_all.pkl")
 # data = pd.read_pickle("/data/nathalie_maria_kirch/jailbroken/dataframes/df_concat_wei.pkl")
-data = pd.read_pickle("/data/nathalie_maria_kirch/ERA_Fellowship/analysis/three_new_jailbreaks.pkl")
+data = pd.read_pickle("/analysis/three_new_jailbreaks.pkl")
 
 
 # melt the dataframe to only have "prompt_name" as a column and make a new column called "jailbreak_prompt_name" that will be the column name

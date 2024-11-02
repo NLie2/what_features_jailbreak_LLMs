@@ -7,7 +7,6 @@ import torch.nn as nn
 import torch.optim as optim
 from gen_data.get_activations import get_res_layers_to_enumerate
 
-sys.path.append('/data/nathalie_maria_kirch/ERA_Fellowship')
 
 from analysis.supervised import *
 from analysis.causal_interventions import *
@@ -157,7 +156,7 @@ def get_response_MLP_logit(model,
     return generated_text
 
 def main(dataset_path, probe_path, target, nr_perturbations, learning_rate, autograder, autograder_tokenizer):
-    save_path = f"/data/nathalie_maria_kirch/ERA_Fellowship/experiments/nathaly/temporary_files/gs/bce_target={target}_nrperturbr{nr_perturbations}_lr={learning_rate}_gs.pkl"
+    save_path = f"/experiments/nathaly/temporary_files/gs/bce_target={target}_nrperturbr{nr_perturbations}_lr={learning_rate}_gs.pkl"
 
     if ".csv" in dataset_path:
       df = pd.read_csv(dataset_path)
@@ -221,8 +220,8 @@ for learning_rate in learning_rates:
     for target in [0, 1]:
       if learning_rate in [0.1, 0.075] and nr_perturbations > 150: 
         continue
-      dataset_path = "/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/validation_data.pkl" 
-      probe_path = "/data/nathalie_maria_kirch/ERA_Fellowship/experiments/nathaly/mlp_probe_weights.pth" 
+      dataset_path = "/datasets/latest/validation_data.pkl" 
+      probe_path = "/experiments/nathaly/mlp_probe_weights.pth" 
       main(dataset_path, probe_path, target, nr_perturbations, learning_rate, autograder, autograder_tokenizer)
       
     

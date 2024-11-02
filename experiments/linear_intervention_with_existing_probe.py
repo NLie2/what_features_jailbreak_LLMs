@@ -7,8 +7,6 @@ import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
-sys.path.append('/data/nathalie_maria_kirch/ERA_Fellowship')
-
 from analysis.supervised import *
 from analysis.causal_interventions import *
 from analysis.Probes import SimpleMLP
@@ -27,7 +25,7 @@ def main(dataset_path, probe_path, save_path, intervention_strength, perturb_pro
     model = AutoModelForCausalLM.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     
-    # probe_path = "/data/nathalie_maria_kirch/ERA_Fellowship/experiments/nathaly/linear_probe.pkl"
+    # probe_path = "/experiments/nathaly/linear_probe.pkl"
     with open(probe_path, 'rb') as f:
       saved_log_model = pickle.load(f)
       
@@ -73,7 +71,7 @@ if __name__ == "__main__":
 
 #############
 
-# with open('/data/nathalie_maria_kirch/ERA_Fellowship/experiments/nathaly/linear_probe.pkl', 'rb') as f:
+# with open('/experiments/nathaly/linear_probe.pkl', 'rb') as f:
 #     saved_log_model = pickle.load(f)
 
 

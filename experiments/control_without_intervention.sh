@@ -11,7 +11,7 @@ conda activate base
 
 
 
-# python control_without_intervention.py "/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/validation_data.pkl" "/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/validation_data_controll_no_intervention.pkl"
+# python control_without_intervention.py "/datasets/latest/validation_data.pkl" "/datasets/latest/validation_data_controll_no_intervention.pkl"
 
-python control_without_intervention.py "/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/validation_data_benign.pkl" "/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/validation_data_benign_control_no_intervention.pkl"
+python control_without_intervention.py "/datasets/latest/validation_data_benign.pkl" "/datasets/latest/validation_data_benign_control_no_intervention.pkl"
 

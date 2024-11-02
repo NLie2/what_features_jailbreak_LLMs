@@ -3,8 +3,6 @@ import os
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer 
 
-sys.path.append("/data/nathalie_maria_kirch/ERA_Fellowship")
-
 
 model_name = "google/gemma-7b-it"
 num_samples = 8000

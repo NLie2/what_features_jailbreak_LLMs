@@ -25,7 +25,6 @@ def process_dataframe(df, model, tokenizer):
     return df
 
 def main(input_path, output_path):
-    sys.path.append("/data/nathalie_maria_kirch/ERA_Fellowship")
     from gen_data.harmBench_autograder import grade_with_HF
 
 

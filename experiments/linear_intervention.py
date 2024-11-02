@@ -8,8 +8,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from analysis.supervised import *
 from analysis.causal_interventions import *
 
-sys.path.append("/data/nathalie_maria_kirch/ERA_Fellowship")
-
 model_name = "google/gemma-7b-it"
 layer=17
 
@@ -18,7 +16,7 @@ def extract_layer(row, layer):
     return row['prompt_res_activations'][layer][0].cpu().numpy().flatten()
 
 
-df = pd.read_pickle("/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/wei_dataset_rated.pkl")
+df = pd.read_pickle("/datasets/latest/wei_dataset_rated.pkl")
 
 # Add column that has 0 if "rating" is "No" and 1 if "rating" is "Yes"
 df['rating_binary'] = df['rating'].apply(lambda x: 0 if x == "No" else 1)
@@ -78,7 +76,7 @@ for exp in exp_config:
 
   df.at[idx, "response_after_causal_intervention"] 
   
-  path = f"/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/wei_dataset_with_linear_intervention.pkl"
+  path = f"/datasets/latest/wei_dataset_with_linear_intervention.pkl"
   pd.to_pickle(path)
   print(f"saved to {path}")
   print()

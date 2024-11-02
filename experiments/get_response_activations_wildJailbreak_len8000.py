@@ -6,14 +6,12 @@ from gen_data.get_wildJailbreak import get_activations_from_df
 
 
 
-sys.path.append("/data/nathalie_maria_kirch/ERA_Fellowship")
-
 from gen_data.get_wildJailbreak import get_activations_from_df
 import pandas as pd
 
 
 
-df = pd.read_pickle("/data/nathalie_maria_kirch/ERA_Fellowship/datasets/allenaiwildjailbreak_googlegemma-2b-it_len_8000_rated_0608202415:19:55.pkl")
+df = pd.read_pickle("/datasets/allenaiwildjailbreak_googlegemma-2b-it_len_8000_rated_0608202415:19:55.pkl")
 
 model_name = "google/gemma-2b-it"
 num_samples = len(df)

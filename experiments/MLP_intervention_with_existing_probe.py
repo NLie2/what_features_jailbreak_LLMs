@@ -4,7 +4,6 @@ import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
-sys.path.append('/data/nathalie_maria_kirch/ERA_Fellowship')
 
 from analysis.supervised import *
 from analysis.causal_interventions import *

@@ -9,7 +9,6 @@ from sklearn.metrics import confusion_matrix
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-sys.path.append('/data/nathalie_maria_kirch/ERA_Fellowship')
 
 from analysis.unsupervised import *
 from analysis.supervised import *
@@ -25,12 +24,12 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
-probe_path = "/data/nathalie_maria_kirch/ERA_Fellowship/experiments/nathaly/mlp_probe_weights.pth"
+probe_path = "/experiments/nathaly/mlp_probe_weights.pth"
 
 
 # Load validation data
-df_val_adv = pd.read_pickle("/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/validation_data.pkl")
-df_val_bng = pd.read_pickle("/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/validation_data_benign.pkl")
+df_val_adv = pd.read_pickle("/datasets/latest/validation_data.pkl")
+df_val_bng = pd.read_pickle("/datasets/latest/validation_data_benign.pkl")
 
 
 
@@ -247,7 +246,7 @@ mlp.train()
 
 
 
-df = pd.read_pickle("/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/validation_data.pkl")
+df = pd.read_pickle("/datasets/latest/validation_data.pkl")
 
 c = 10
 lr = 0.005
@@ -258,7 +257,7 @@ for index, row in df.iterrows():
     print(response)
 
 
-path = f"/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/c/offensive_mlp_intervention_c={c}_lr={lr}_nr_p={nr_perturbations}.pkl"
+path = f"/datasets/latest/c/offensive_mlp_intervention_c={c}_lr={lr}_nr_p={nr_perturbations}.pkl"
 df.to_pickle(path)
 
 print(path)

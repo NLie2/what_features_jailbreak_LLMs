@@ -18,4 +18,4 @@ conda activate base
     # perturb_prompt_or_all = sys.argv[5]
 
 
-python linear_intervention_with_existing_probe.py "/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/validation_data_benign.pkl" "/data/nathalie_maria_kirch/ERA_Fellowship/experiments/nathaly/linear_probe.pkl" "/data/nathalie_maria_kirch/ERA_Fellowship/datasets/latest/validation_data_benign_with_linear_intervention_strength_-025.pkl" -0.25 "all"
+python linear_intervention_with_existing_probe.py "/datasets/latest/validation_data_benign.pkl" "/datasets/Probes/linear_probe.pkl" "/datasets/latest/validation_data_benign_with_linear_intervention_strength_-025.pkl" -0.25 "all"
