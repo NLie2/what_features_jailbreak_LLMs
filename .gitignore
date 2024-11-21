@@ -1,5 +1,6 @@
 *.ipynb
 !analysis/notebooks/*.ipynb
+!gen_data/get_dataset.ipynb
 *.env
 *.pkl
 *.csv
