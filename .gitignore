@@ -4,6 +4,7 @@
 *.pkl
 *.csv
 *.txt
+!requirements.txt
 *.png
 *.pdf
 *.yaml
