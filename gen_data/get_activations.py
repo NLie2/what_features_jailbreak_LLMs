@@ -1,5 +1,22 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer 
+from datasets import load_dataset
+import pandas as pd 
+import numpy as np
+from datetime import datetime
+import os
+from dotenv import load_dotenv
+import pickle
+import sys
+
+from .helper import save_with_timestamp
+
+# Ensure environment variables are loaded
+load_dotenv()
+
+HF_TOKEN = os.getenv("HF_TOKEN")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 
 
 
@@ -49,7 +66,7 @@ def get_res_activations(model,
     device = next(model.parameters()).device
 
     #model, tokenizer = models.get_model_from_name(model_name)
-    input_ids = tokenizer.encode(prompt, return_tensors='pt', truncation=True).to(device)
+    input_ids = tokenizer.encode(prompt, return_tensors='pt', truncation=True, padding=True).to(device)
     len_prompt = len(input_ids)
 
     activations = {}
@@ -93,7 +110,7 @@ def get_res_activations(model,
       # also add model.generate and save the output 
       
       # set do_sample to True for stochastic output
-      output_sequence = model.generate(input_ids, num_return_sequences=1, max_new_tokens=200, do_sample=False)
+      output_sequence = model.generate(input_ids, attention_mask=inputs['attention_mask'], num_return_sequences=1, max_new_tokens=200, temperature = 0, do_sample=False, pad_token_id=tokenizer.eos_token_id )
       
       generated_text = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
       
@@ -105,6 +122,36 @@ def get_res_activations(model,
     
     return {type_of_activations : activations}
 
+
+def get_activations_from_df(model_name, df, prompt_column, n_rows= None, n_start = 0,  dataset_name =  "", token_position = "all", generate_output = False, type_of_activations = "res_activations"): 
+    # get model 
+    model, tokenizer = get_model(model_name)
+
+    df[type_of_activations] = None
+    
+    counter = 0 
+
+    if n_rows == None: 
+        n_rows = len(df) 
+    
+    print(f"Dataset loaded successfully with {n_rows} rows")
+
+    for row in df.iloc[:n_rows].iterrows():
+        counter+=1 
+        index = row[0]
+        print(f"Processing prompt {counter + 1}/{n_rows}")
+    
+        prompt = row[1][prompt_column]
+
+        output_activations = get_res_activations(model = model, tokenizer = tokenizer, token_position = token_position, prompt = prompt, type_of_activations=type_of_activations, generate_output=generate_output)
+        
+        df.at[index, type_of_activations] = output_activations[type_of_activations]
+        
+        if generate_output: df.at[index, 'output_text'] = output_activations['output_text']
+
+    print("Processing complete")
+    
+    return save_with_timestamp(model_name=model_name, dataset_name=dataset_name, save = True, df=df, add_info = type_of_activations)
 
 
 
