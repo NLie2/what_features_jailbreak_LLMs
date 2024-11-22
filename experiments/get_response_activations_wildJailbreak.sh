@@ -3,7 +3,6 @@
 #SBATCH --partition=single
 #SBATCH --time=5:00:00
 #SBATCH --gpus-per-node=1
-#SBATCH --mail-user=nathalie.kirch.nk@gmail.com
 #SBATCH --mail-type=END
 #SBATCH --output=logs/get_response_activations_wildjailbreak_8000
 

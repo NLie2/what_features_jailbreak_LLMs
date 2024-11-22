@@ -1,56 +1,29 @@
+import argparse
 import pandas as pd
-import sys
+from gen_data.get_activations import get_activations_from_df
+from pathlib import Path
 
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description="Process model activations.")
+parser.add_argument("--model_name", required=True, help="Name or path of the model to use.")
+args = parser.parse_args()
 
-from gen_data.get_wildJailbreak import get_activations_from_df
+# Assign the parsed model name
+model_name = args.model_name
 
+# Define paths
+notebook_dir = Path.cwd()
+project_root = notebook_dir.parent
+data = pd.read_pickle(project_root / "datasets/jailbreak_success.pkl")
 
-# data = pd.read_pickle('/data/nathalie_maria_kirch/jailbroken/jailbroken_prompts_last.pkl')
-# data = pd.read_pickle("/data/nathalie_maria_kirch/jailbroken/jailbroken_prompts_gemmma_7b.pkl")
-# data = pd.read_pickle("/data/nathalie_maria_kirch/jailbroken/dataframes/data_all.pkl")
-# data = pd.read_pickle("/data/nathalie_maria_kirch/jailbroken/dataframes/df_concat_wei.pkl")
-data = pd.read_pickle("/analysis/three_new_jailbreaks.pkl")
+# Generate activations
+path = get_activations_from_df(
+    model_name=model_name,
+    df=data,
+    prompt_column="jailbreak_prompt_text",
+    token_position="last",
+    generate_output=True,
+    type_of_activations="prompt_res_activations"
+)
 
-
-# melt the dataframe to only have "prompt_name" as a column and make a new column called "jailbreak_prompt_name" that will be the column name
-data = data.melt(id_vars=['prompt_name'], var_name='jailbreak_prompt_name', value_name='jailbreak_prompt_text')
-
-# print unique entries in jailbreak_prompt_name
-print(data['jailbreak_prompt_name'].unique())
-print(data['prompt_name'].unique())
-
-model_name = "google/gemma-7b-it"
-# model_name = "meta-llama/Meta-Llama-3-8B-Instruct"
-dataset_name = "wei_dataset"
-
-
-
-path = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
-
-print(path)
-
-# total_length = len(data)
-# quartile_1, quartile_2, quartile_3 = total_length//4, total_length//2, 3*total_length//4
-# data_quartile_1 = data[:quartile_1]
-# data_quartile_2 = data[quartile_1:quartile_2]
-# data_quartile_3 = data[quartile_2:quartile_3]
-# data_quartile_4 = data[quartile_3:]
-
-
-# path_1 = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_1, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
-
-# print(path_1)
-
-# path_2 = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_2, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
-
-# print(path_2)
-
-# path_3 = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_3, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
-
-# print(path_3)
-
-# path_4 = get_activations_from_df(model_name = model_name, dataset_name = dataset_name, df = data_quartile_4, prompt_column = "jailbreak_prompt_text", token_position = "last", generate_output=True, type_of_activations="prompt_res_activations")
-
-# print(path_4)
-
-
+print(f"Generated activations saved at: {path}")

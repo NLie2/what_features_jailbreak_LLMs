@@ -3,7 +3,6 @@
 #SBATCH --partition=single
 #SBATCH --time=30:00:00
 #SBATCH --gpus-per-node=1
-#SBATCH --mail-user=nathalie.kirch.nk@gmail.com
 #SBATCH --mail-type=END
 #SBATCH --output=logs/old_probe_logit_1_60_01.out
 

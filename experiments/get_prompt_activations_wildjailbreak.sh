@@ -3,7 +3,6 @@
 #SBATCH --partition=single
 #SBATCH --time=20:00:00
 #SBATCH --gpus-per-node=1
-#SBATCH --mail-user=sevdeawesome@gmail.com
 #SBATCH --mail-type=END
 #SBATCH --output=logs/collect_wildjailbreak_8000
 
