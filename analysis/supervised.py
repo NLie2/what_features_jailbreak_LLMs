@@ -600,8 +600,7 @@ def transfer_with_holdout_with_errors(df, probe_type, layer):
     return holdout_df
 
 
-def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath = None):
-    
+def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath=None):
     # Compute the mean of each row and each column
     row_means = results_df.mean(axis=1)
     col_means = results_df.mean(axis=0)
@@ -641,17 +640,17 @@ def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath 
     mean_cmap = sns.light_palette("orange", n_colors=50, as_cmap=True)  # Shaded gradient for row/column means
     
     # Set up the plot
-    plt.figure(figsize=(12, 10))
+    plt.figure(figsize=(18, 15))  # Increase figure size to make cells larger
 
     # Plot the heatmap for the main data
     ax = sns.heatmap(results_df, annot=True, fmt=".2f", cmap=cmap, cbar=True, 
                      linewidths=.5, mask=mask & ~highlight_mask, square=True, 
-                     annot_kws={"color": "black"})
+                     annot_kws={"color": "black", "fontsize": fontsize3})
 
     # Overlay the row/column means with a different color
     sns.heatmap(results_df, annot=True, fmt=".2f", cmap=mean_cmap, cbar=False, 
                 linewidths=.5, mask=~highlight_mask, square=True, 
-                annot_kws={"color": "black"}) 
+                annot_kws={"color": "black", "fontsize": fontsize3}) 
 
     # Now manually annotate the masked (white) cells
     for i in range(results_df.shape[0]):
@@ -660,18 +659,23 @@ def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath 
                 ax.text(j + 0.5, i + 0.5, f"{results_df.iloc[i, j]:.2f}",
                         ha='center', va='center', color='black', fontsize=fontsize3)
                 
+    # Adjust ticks and labels for readability
     plt.xticks(fontsize=fontsize3)
     plt.yticks(fontsize=fontsize3)
 
-    plt.xlabel("Test Data", fontsize=fontsize2)
-    plt.ylabel("Training Data", fontsize=fontsize2)
-    plt.title(f"Heatmap of {probe_type} Accuracy {dataset_name} for {model_name}", fontsize=fontsize1, pad=20)
+    # Add axis labels and title
+    plt.xlabel("Test Data", fontsize=fontsize2, labelpad=15)
+    plt.ylabel("Training Data", fontsize=fontsize2, labelpad=15)
+    plt.title(f"Heatmap of {probe_type} Accuracy {dataset_name} for {model_name}",
+              fontsize=fontsize1, pad=25)
     
-    
+    # Optionally save the figure
     if savepath: 
-        plt.savefig(savepath)
+        plt.savefig(savepath, bbox_inches='tight', dpi=300)  # High DPI for better quality
     
     plt.show()
+
+
     
 
 
