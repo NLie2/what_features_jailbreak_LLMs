@@ -4,7 +4,17 @@ import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
-sys.path.append('/data/nathalie_maria_kirch/ERA_Fellowship')
+
+from pathlib import Path
+
+# Get the current working directory (where the notebook is)
+notebook_dir = Path.cwd()
+
+# Move up to the root directory (parent of 'notebooks')
+project_root = notebook_dir.parent
+
+
+sys.path.append(notebook_dir.parent)
 
 from analysis.supervised import *
 from analysis.causal_interventions import *

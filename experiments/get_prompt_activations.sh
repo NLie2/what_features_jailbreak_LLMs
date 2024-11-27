@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=wei_activations
+#SBATCH --job-name=get_prompt_activations
 #SBATCH --partition=single
 #SBATCH --time=20:00:00
 #SBATCH --gpus-per-node=1
@@ -8,4 +8,4 @@
 
 conda activate base
 
-python get_prompt_activations.py --model_name "meta-llama/Meta-Llama-3-8B"
+python get_prompt_activations.py --model_name "meta-llama/Llama-3.1-8B-Instruct"
