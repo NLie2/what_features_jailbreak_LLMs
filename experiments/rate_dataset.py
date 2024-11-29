@@ -6,60 +6,45 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import pandas as pd
 import sys
+from pathlib import Path
+import os
+from gen_data.harmBench_autograder import *
 
-# Function to process the dataframe
-def process_dataframe(df, model, tokenizer):
-    dictionary = {}
-    # loop through every row where jailbreak_prompt_name is original_prompt
-    for index, row in df.iterrows():
-        if row['jailbreak_prompt_name'] == 'original_prompt':
-            prompt_id = row['prompt_name']
-            prompt_text = row['jailbreak_prompt_text']
-            dictionary[prompt_id] = prompt_text
+def main(input_path, column_to_grade):
+  
+    # Get the current working directory (where the notebook is)
+    current_dir = Path.cwd()
 
-    # now loop through every row, and add a column called "original_prompt_text" to the dataframe
-    for index, row in df.iterrows():
-        prompt_id = row['prompt_name']
-        df.loc[index, 'original_prompt_text'] = dictionary.get(prompt_id, None)
-    
-    return df
+    # Move up to the root directory (parent of 'notebooks')
+    project_root = current_dir.parent.parent
 
-def main(input_path, output_path):
-    from gen_data.harmBench_autograder import grade_with_HF
-
+    os.chdir(project_root)
 
     # Load the dataframe from the input path
     df = pd.read_pickle(input_path)
     
-    df.rename(columns={"jailbreak_prompt_text" : "original_prompt_text", "MLP_intervention_response": "output_text", "linear_intervention_response": "output_text", "control_no_intervention_response": "output_text"}, inplace=True)
-    
+    output_path = input_path.replace("input", "output")
     # Load the HarmBench model
     model_name = "cais/HarmBench-Llama-2-13b-cls"
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-    model.to('cuda')
-    tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False, truncation_side="left", padding_side="left")
-
-    # Process the dataframe
-    if "wei" in input_path: 
-      df = process_dataframe(df, model, tokenizer)
-    elif "allen" in input_path:
-      df = df.rename(columns={"forbidden_prompt": "original_prompt_text", "response": "output_text"})
-
-
+    autograder = AutoModelForCausalLM.from_pretrained(model_name)
+    autograder.to('cuda')
+    autogr_tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False, truncation_side="left", padding_side="left")
+    
     # Apply the grading function and add the ratings column
-    df["rating"] = df.apply(lambda row: grade_with_HF(row['original_prompt_text'], [row['output_text']], model, tokenizer, verbose = True)[0], axis=1)
+    df[f"rating_{column_to_grade}"] = df.apply(lambda row: grade_with_HF(row['original_prompt_text'], [row[column_to_grade]], autograder, autogr_tokenizer, verbose = True)[0], axis=1)
+    print("rated")
 
     # Save the dataframe to the output path
     df.to_pickle(output_path)
     print(output_path)
-
+ 
 if __name__ == "__main__":
     # Set up argument parsing
     parser = argparse.ArgumentParser(description="Process a dataframe and grade the prompts.")
-    parser.add_argument("input_path", type=str, help="Path to the input pickle file")
-    parser.add_argument("output_path", type=str, help="Path to save the output pickle file")
+    parser.add_argument("--input_path", type=str, required=True, help="Path to the input pickle file")
+    parser.add_argument("--column_to_grade", type=str, required=True, help="Column to grade")
   
     args = parser.parse_args()
 
     # Run the main function with the provided arguments
-    main(args.input_path, args.output_path)
+    main(args.input_path, args.column_to_grade)
