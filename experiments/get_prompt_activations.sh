@@ -8,4 +8,4 @@
 
 conda activate base
 
-python get_prompt_activations.py --model_name "meta-llama/Llama-3.1-8B-Instruct"
+python get_prompt_activations.py --model_name "meta-llama/Llama-3.2-3B-Instruct"

@@ -54,30 +54,39 @@ def balance_dataset(df, colname):
   return df
 
 
+from sklearn.linear_model import LogisticRegression
+
 def create_logistic_regression_model(data, labels, split_idx):
     '''
-    input: layer_idx (int), split_idx (int)
-    The split_idx is the index at which the training data ends and the testing data begins
-    output: trained logistic regression model
+    Input:
+        data: Features (e.g., numpy array or pandas DataFrame)
+        labels: Corresponding labels for the data
+        split_idx: Index at which the training data ends and the testing data begins
+    Output:
+        log_model: Trained Logistic Regression model
+        train_accuracy: Accuracy of the model on the training set
+        test_accuracy: Accuracy of the model on the test set
     '''
 
+    # Initialize the Logistic Regression model
     log_model = LogisticRegression(solver='lbfgs', max_iter=1000)
 
+    # Split the data into training and testing sets
     x_train = data[:split_idx]
     y_train = labels[:split_idx]
-    
-    print("len train", len(x_train), len(y_train))
-
-    log_model.fit(x_train, y_train)
-    
-    
     x_test = data[split_idx:]
     y_test = labels[split_idx:]
-    print("len test", len(x_test), len(y_test))
-    
-    accuracy = log_model.score(x_test, y_test)
 
-    return log_model, accuracy
+    # Train the model
+    log_model.fit(x_train, y_train)
+
+    # Calculate training and testing accuracy
+    train_accuracy = log_model.score(x_train, y_train)
+    test_accuracy = log_model.score(x_test, y_test)
+
+    # Return model and accuracies
+    return log_model, train_accuracy, test_accuracy
+
 
 
 def train_logistic_regression_model(data, labels, split_idx):
@@ -120,14 +129,6 @@ def get_validation_data(data_type, layer_idx, split_idx, y_col='score'):
     return layer, y_test
 
 
-
-# def get_confusion_matrix(log_model, X_test, y_test):
-#     '''
-#     input: log_model (LogisticRegression), X_test (array), y_test (array)
-#     output: confusion matrix (array)
-#     '''
-#     y_pred = log_model.predict(X_test)
-#     return confusion_matrix(y_test, y_pred)
 def get_confusion_matrix_and_accuracy(log_model, X_test, y_test):
     '''
     input: log_model (LogisticRegression), X_test (array), y_test (array)
@@ -160,8 +161,7 @@ def plot_confusion_matrix(accuracy, probe_type, conf_matrix, class_names, datase
     plt.ylabel('Actual', fontsize=fontsize2)
     
     # Add a figure text below the plot
-    plt.figtext(0.5, -0.1, f'{probe_type} Probe with Accuracy {accuracy:.2f} \n {model_name.replace("-"," ").title()} (Layer {layer}) {dataset_name}', 
-                ha='center', fontsize=fontsize1, style='italic')  # moved text slightly lower
+    plt.figtext(0.5, -0.1, f"{probe_type} Probe with Accuracy {accuracy} \n {model_name.replace("-"," ").title()} (Layer {layer}) {dataset_name}", ha='center', fontsize=fontsize1, style='italic')  # moved text slightly lower
     
     # Adjust x and y ticks font size
     plt.xticks(fontsize=fontsize3)
@@ -172,48 +172,12 @@ def plot_confusion_matrix(accuracy, probe_type, conf_matrix, class_names, datase
 
     # Save the plot if save=True
     if save:
-        save_fig_path = f'/data/nathalie_maria_kirch/ERA_Fellowship/images/confusion_matrices/{probe_type}_{dataset_name.replace("/", "_")}.pdf'  
+        save_fig_path = f'/images/confusion_matrices/{probe_type}_{dataset_name.replace("/", "_")}.pdf'  
         plt.savefig(save_fig_path, bbox_inches='tight')  # Added bbox_inches='tight'
     
     # Show the plot
     plt.show()
 
-# def plot_confusion_matrix(accuracy, probe_type, conf_matrix, class_names, dataset_name, model_name, layer, save=False):
-#     '''
-#     input: conf_matrix (array), class_names (list of str)
-#     output: None
-#     '''
-#     plt.figure(figsize=(10, 8))
-    
-#     # Labels for the confusion matrix (0 = no jailbreak, 1 = jailbreak)
-#     labels = ["no jailbreak", "jailbreak"] 
-    
-#     # Plot the confusion matrix
-#     sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Greens', xticklabels=labels, yticklabels=labels)
-    
-#     # Set axis labels
-#     plt.xlabel('Predicted', fontsize=16)
-#     plt.ylabel('Actual', fontsize=16)
-    
-#     # Add a figure text below the plot
-#     plt.figtext(0.5, -0.05, f'{probe_type} probe with accuracy {accuracy:.2f} | {model_name} (Layer {layer}) {dataset_name}', 
-#                 ha='center', fontsize=20, style='italic')
-    
-#     # Adjust x and y ticks font size
-#     plt.xticks(fontsize=14)
-#     plt.yticks(fontsize=14)
-
-#     # Adjust layout to ensure nothing overlaps
-#     plt.tight_layout()
-
-#     # Save the plot if save=True
-#     if save:
-#         save_fig_path = f'/data/nathalie_maria_kirch/ERA_Fellowship/images/confusion_matrices/{probe_type}_{dataset_name.replace("/", "_")}.pdf'  
-#         plt.savefig(save_fig_path)
-    
-#     # Show the plot
-#     plt.show()
-    
     
 def create_mlp_model(data, labels, split_idx, hidden_layer_sizes=(8,), max_iter=1000):
     '''
@@ -264,11 +228,10 @@ def split_dataset_by_jailbreak(df):
   """
   jailbreak_dfs = {}
   for jailbreak in df["jailbreak_prompt_name"].unique():
-      print(jailbreak) 
       jailbreak_dfs[jailbreak] = df[df["jailbreak_prompt_name"] == jailbreak]
-      print(len(jailbreak_dfs[jailbreak]))
       jailbreak_dfs[jailbreak]
       
+
       # shuffle and balance all dfs
       jailbreak_dfs[jailbreak] = balance_dataset(jailbreak_dfs[jailbreak], "rating_binary")
       jailbreak_dfs[jailbreak]["rating_binary"].value_counts()
@@ -297,13 +260,13 @@ def probe_transfer(df, probe_type, layer):
     
     try: 
       if probe_type == "logistic_regression":
-        probe, accuracy = create_logistic_regression_model(train_data, labels, split_idx)
+        probe, train_accuracy, test_accuracy = create_logistic_regression_model(train_data, labels, split_idx)
       
       elif probe_type == "MLP":
         print("PROBE TYPE", probe_type)
         probe, accuracy = create_mlp_model(train_data, labels, split_idx)
 
-      results_df.loc[jailbreak_1, jailbreak_1] = accuracy
+      results_df.loc[jailbreak_1, jailbreak_1] = test_accuracy
     
     except: 
       print("Error training the")
@@ -340,57 +303,6 @@ def probe_transfer(df, probe_type, layer):
     
   return results_df
 
-
-
-
-# def holdout_transfer_graph(holdout_df, dataset_name, model_name, layer, probe_type, savepath=None):
-#     # Reset the index
-#     holdout_df = holdout_df.reset_index()
-
-#     # Rename the index column to 'technique'
-#     holdout_df = holdout_df.rename(columns={'index': 'Technique'})
-
-#     # Select relevant columns
-#     holdout_df = holdout_df[['Technique', 'Train Set', 'Test Set (Holdout)']]
-
-#     # Sort by the 'Test Set (Holdout)' column in ascending order
-#     # holdout_df = holdout_df.sort_values(by='Test Set (Holdout)', ascending=True)
-
-#     # Set 'technique' as the index
-#     holdout_df.set_index('Technique', inplace=True)
-
-#     # Format the y-tick labels: replace '_' with ' ' and title case
-#     holdout_df.index = [label.replace('_', ' ').title() for label in holdout_df.index]
-
-#     # Plot the bar plot with adjusted bar height and width
-#     ax = holdout_df.plot(kind='barh', figsize=(15, 12), color=['skyblue', 'salmon'], linewidth=0.5, width=0.85)
-
-#     # Add titles and labels
-#     plt.xlabel('Accuracy', fontsize=fontsize2)
-#     plt.ylabel('Held out Category', fontsize=fontsize2)
-#     plt.xticks(rotation=45, ha="right", fontsize=fontsize3)
-#     plt.yticks(fontsize=fontsize3)
-
-#     # Set the plot title
-#     plt.figtext(0.5, -0.1, f'{probe_type} Accuracy by Holdout Type\n {model_name.replace("-", " ").title()} (Layer {layer})', ha='center', fontsize=fontsize1, style='italic')
-
-#     # Move the legend underneath the graph
-#     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), fontsize=fontsize2, ncol=2)
-
-#     # Add a red vertical line at 0.50 for accuracy threshold
-#     plt.axvline(x=0.50, color='red', linestyle='--', linewidth=2, label="Threshold 0.50")
-
-#     # Adjust layout to prevent overlap
-#     plt.tight_layout(pad=1.0)
-
-#     # Set the x-axis limits from 0 to 1
-#     plt.xlim(0, 1)
-
-#     # Show or save the plot
-#     if savepath:
-#         plt.savefig(savepath, bbox_inches='tight')
-
-#     plt.show()
 
 def holdout_transfer_graph(holdout_df, dataset_name, model_name, layer, probe_type, mean_tranfer_score = None, savepath=None):
     # Reset the index
@@ -472,18 +384,17 @@ def holdout_transfer_graph(holdout_df, dataset_name, model_name, layer, probe_ty
 
 
 def transfer_with_holdout(df, probe_type, layer):
-  
-  jailbreak_dfs = split_dataset_by_jailbreak(df)
    
 
-  holdout_df = pd.DataFrame(columns=["Train Set", "Test Set (Holdout)"] , index=jailbreak_dfs.keys())
+  holdout_df = pd.DataFrame(columns=["Train Set", "Test Set (Holdout)"] , index=df['jailbreak_prompt_name'].unique())
   
 
   for i in df['jailbreak_prompt_name'].unique():
     df_holdout = df[df['jailbreak_prompt_name'] != i]
-    print("Holdout: ", i)
-    print(df_holdout['jailbreak_prompt_name'].unique())
-  
+    print("Holdout: ", i)  
+    # Get value counts for for rating_binary
+    print("before balancing")
+    print(df_holdout["rating_binary"].value_counts())
     
     # shuffle and balance all dfs
     df_holdout = balance_dataset(df_holdout, "rating_binary")
@@ -492,6 +403,7 @@ def transfer_with_holdout(df, probe_type, layer):
     # shuffle dataset
     df_holdout = df_holdout.sample(frac=1).reset_index(drop=True)
 
+    print("after balancing")
     # Get value counts for for rating_binary
     print(df_holdout["rating_binary"].value_counts())
   
@@ -544,49 +456,46 @@ def transfer_with_holdout(df, probe_type, layer):
   return holdout_df
   
 
+
 def transfer_with_holdout_with_errors(df, probe_type, layer):
   
-    jailbreak_dfs = split_dataset_by_jailbreak(df)
-    holdout_df = pd.DataFrame(columns=["Train Set", "Test Set (Holdout)", "Test Set SE", "Test Size"], index=jailbreak_dfs.keys())
+    # jailbreak_dfs = split_dataset_by_jailbreak(df)
+    holdout_df = pd.DataFrame(columns=["Train Set", "Test Set (Holdout)", "Test Set SE", "Test Size"], index=df['jailbreak_prompt_name'].unique())
+  
   
     for i in df['jailbreak_prompt_name'].unique():
         df_holdout = df[df['jailbreak_prompt_name'] != i]
         print("Holdout: ", i)
-    
+        
+        # Get value counts for for rating_binary
+        print("before balancing")
+        print(df_holdout["rating_binary"].value_counts())
+        
+        
         # Shuffle and balance all dfs
-        print("len before balancing", len(df_holdout))
         df_holdout = balance_dataset(df_holdout, "rating_binary")
-        print("len after balancing", len(df_holdout))
-
+        # Get value counts for for rating_binary
+        print("after balancing")
+        print(df_holdout["rating_binary"].value_counts())
+        
+        # shuffle dataset 
         df_holdout = df_holdout.sample(frac=1).reset_index(drop=True)
         split_idx = int(0.8 * len(df_holdout))
         labels = df_holdout["rating_binary"].to_list()
-        train_data = df_holdout[f'layer_{layer}'].to_list()
+        data = df_holdout[f'layer_{layer}'].to_list()
+        
         
         if probe_type == "logistic_regression":
-            probe, train_accuracy = create_logistic_regression_model(train_data, labels, split_idx)
+            probe, train_accuracy, test_accuracy = create_logistic_regression_model(data, labels, split_idx)
+
         elif probe_type == "MLP": 
-            probe, train_accuracy = create_mlp_model(train_data, labels, split_idx)
+            probe, train_accuracy, test_accuracy = create_mlp_model(data, labels, split_idx)
 
-        holdout_df.loc[i, "Train Set"] = train_accuracy
+        holdout_df.loc[i,"Train Set", ] = train_accuracy
         print(train_accuracy)
-
-        df_holdout_test = df[df['jailbreak_prompt_name'] == i]
-
-        # Shuffle and balance dataset
-        print("test len before balancing", len(df_holdout_test))
-        test_df = balance_dataset(df_holdout_test, "rating_binary")
-        print("test len after balancing", len(test_df))
-        test_df = test_df.sample(frac=1).reset_index(drop=True)
-        split_idx = int(0.8 * len(test_df))
-        labels = test_df["rating_binary"].to_list()
-        test_data = test_df[f'layer_{layer}'].to_list()
-
-        if probe_type == "logistic_regression":
-            test_accuracy = evaluate_logistic_regression_model(probe, test_data, labels, split_idx)
-        elif probe_type == "MLP":
-            test_accuracy = evaluate_mlp_model(probe, test_data, labels, split_idx)
-
+        holdout_df.loc[i,"Test Set", ] = train_accuracy
+        print(test_accuracy)
+        
         # Calculate standard error for the test accuracy
         n_test_samples = len(labels)  # number of samples in the test set
         test_se = np.sqrt((test_accuracy * (1 - test_accuracy)) / n_test_samples)

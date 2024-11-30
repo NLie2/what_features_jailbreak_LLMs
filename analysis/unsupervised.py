@@ -15,17 +15,10 @@ fontsize2 = 24
 fontsize3 = 30
 
 def visualize_act_with_t_sne(model_name, tensors_flat, labels, dataset_name, num_samples, layer, perplexity=30, scores=None, save=False):
-    # Apply t-SNE
-    print("t-SNE visualization of the weights of the residual stream of the model")
-    
+    # Apply t-SNE    
     # labels = [label.replace("_", " ").title().replace("cg", "CG") for label in labels]
     tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42)
-    print("Fitting t-SNE...", [tensor for tensor in tensors_flat])
-
     tensors_tsne = tsne.fit_transform(tensors_flat)
-
-    # Check the shape of tensors_tsne to ensure it matches expected dimensions
-    print("Shape of tensors_tsne:", tensors_tsne.shape)
 
     # Ensure that the number of labels matches the number of samples in tensors_tsne
     assert len(labels) == tensors_tsne.shape[0], "The number of labels must match the number of samples in tensors_tsne."

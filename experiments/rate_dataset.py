@@ -15,15 +15,16 @@ def main(input_path, column_to_grade):
     # Get the current working directory (where the notebook is)
     current_dir = Path.cwd()
 
-    # Move up to the root directory (parent of 'notebooks')
-    project_root = current_dir.parent.parent
+    # Move up to the root directory (parent of 'experiments')
+    project_root = current_dir.parent
 
-    os.chdir(project_root)
+    # os.chdir(project_root)
 
     # Load the dataframe from the input path
-    df = pd.read_pickle(input_path)
+    df = pd.read_pickle(project_root / input_path)
     
-    output_path = input_path.replace("input", "output")
+    output_path = input_path.replace(".plk", "_rated.pkl")
+    
     # Load the HarmBench model
     model_name = "cais/HarmBench-Llama-2-13b-cls"
     autograder = AutoModelForCausalLM.from_pretrained(model_name)
