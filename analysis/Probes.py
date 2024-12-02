@@ -5,17 +5,22 @@ import torch.optim as optim
 import torch.nn as nn
 
 class SimpleMLP(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size=3072):
+        """
+        Parameters:
+        - input_size (int): The size of the input features.
+        """
         super(SimpleMLP, self).__init__()
-        # Input layer to hidden layer with 8 neurons, process each of the 8 sequences separately
-        self.fc1 = nn.Linear(3072, 8)
+        
+        # Input layer to hidden layer with 8 neurons
+        self.fc1 = nn.Linear(input_size, 8)
         self.relu = nn.ReLU()
-        # Process the output from the 8 sequences, reduce to a single output
+        
+        # Hidden layer to output layer
         self.fc2 = nn.Linear(8, 1)
         
         self.scaler = StandardScaler()
-                
-        self.accuracy = 0 
+        self.accuracy = 0
 
     def forward(self, x):
         # x is expected to have shape [1, 8, 3072]
