@@ -204,12 +204,14 @@ def create_mlp_model(data, labels, split_idx, hidden_layer_sizes=(8,), max_iter=
     # Train the model
     mlp_model.fit(X_train_scaled, y_train)
     
+    train_accuracy = mlp_model.score(x_train, y_train)
+    
     x_test = data[split_idx:]
     y_test = labels[split_idx:]
     
-    accuracy = mlp_model.score(x_test, y_test)
+    test_accuracy = mlp_model.score(x_test, y_test)
 
-    return mlp_model, accuracy
+    return mlp_model, train_accuracy, test_accuracy
   
   
 def evaluate_mlp_model(mlp_model, data, labels, split_idx): 
@@ -264,7 +266,7 @@ def probe_transfer(df, probe_type, layer):
       
       elif probe_type == "MLP":
         print("PROBE TYPE", probe_type)
-        probe, accuracy = create_mlp_model(train_data, labels, split_idx)
+        probe, train_accuracy, test_accuracy = create_mlp_model(train_data, labels, split_idx)
 
       results_df.loc[jailbreak_1, jailbreak_1] = test_accuracy
     
@@ -549,7 +551,7 @@ def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath=
     mean_cmap = sns.light_palette("orange", n_colors=50, as_cmap=True)  # Shaded gradient for row/column means
     
     # Set up the plot
-    plt.figure(figsize=(18, 15))  # Increase figure size to make cells larger
+    plt.figure(figsize=(20, 17))  # Increase figure size to make cells larger
 
     # Plot the heatmap for the main data
     ax = sns.heatmap(results_df, annot=True, fmt=".2f", cmap=cmap, cbar=True, 
@@ -575,7 +577,7 @@ def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath=
     # Add axis labels and title
     plt.xlabel("Test Data", fontsize=fontsize2, labelpad=15)
     plt.ylabel("Training Data", fontsize=fontsize2, labelpad=15)
-    plt.title(f"Heatmap of {probe_type} Accuracy {dataset_name} for {model_name}",
+    plt.title(f"Heatmap of {probe_type} Accuracy \n {dataset_name} \n {model_name}",
               fontsize=fontsize1, pad=25)
     
     # Optionally save the figure
@@ -583,6 +585,82 @@ def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath=
         plt.savefig(savepath, bbox_inches='tight', dpi=300)  # High DPI for better quality
     
     plt.show()
+    
+# def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath=None):
+#     # Compute the mean of each row and each column
+#     row_means = results_df.mean(axis=1)
+#     col_means = results_df.mean(axis=0)
+
+#     # Sort the row and column indexes by their means
+#     sorted_rows = row_means.sort_values(ascending=False).index
+#     sorted_cols = col_means.sort_values(ascending=True).index
+
+#     # Reorder the DataFrame based on sorted rows and columns
+#     results_df = results_df.loc[sorted_rows, sorted_rows]
+
+#     # Append row means and column means to the DataFrame
+#     results_df['Test Mean'] = row_means[sorted_rows]
+#     col_means_sorted = col_means[sorted_rows]
+#     results_df.loc['Training Mean'] = col_means_sorted
+
+#     # Set the "row mean" of the "column means" cell to NaN to exclude it from the heatmap
+#     results_df.loc['Training Mean', 'Test Mean'] = np.nan
+
+#     # Replace NaN with 0, except for the special NaN we just created
+#     results_df = results_df.fillna(0)
+#     results_df.loc['Training Mean', 'Test Mean'] = np.nan
+
+#     # Create a mask for values below 0.50 with the new DataFrame shape
+#     mask = results_df < 0.51
+
+#     # Create a mask to highlight the row and column means
+#     highlight_mask = pd.DataFrame(False, index=results_df.index, columns=results_df.columns)
+#     highlight_mask.iloc[-1, :] = True  # Last row for row means
+#     highlight_mask.iloc[:, -1] = True  # Last column for column means
+    
+#     # Mask the specific "row mean" of the "column means" cell
+#     highlight_mask.loc['Training Mean', 'Test Mean'] = True
+
+#     # Create a custom colormap
+#     cmap = sns.color_palette("Greens", as_cmap=True)
+#     mean_cmap = sns.light_palette("orange", n_colors=50, as_cmap=True)  # Shaded gradient for row/column means
+    
+#     # Set up the plot with a larger figure size
+#     plt.figure(figsize=(20, 18))  # Increase figure size to make cells larger
+
+#     # Plot the heatmap for the main data
+#     ax = sns.heatmap(results_df, annot=True, fmt=".2f", cmap=cmap, cbar=True, 
+#                      linewidths=.5, mask=mask & ~highlight_mask, square=False,  # Set square=False for flexibility
+#                      annot_kws={"color": "black", "fontsize": 14})  # Increase fontsize for better readability
+
+#     # Overlay the row/column means with a different color
+#     sns.heatmap(results_df, annot=True, fmt=".2f", cmap=mean_cmap, cbar=False, 
+#                 linewidths=.5, mask=~highlight_mask, square=False, 
+#                 annot_kws={"color": "black", "fontsize": 14}) 
+
+#     # Now manually annotate the masked (white) cells
+#     for i in range(results_df.shape[0]):
+#         for j in range(results_df.shape[1]):
+#             if mask.iloc[i, j]:  # Access the mask correctly with .iloc
+#                 ax.text(j + 0.5, i + 0.5, f"{results_df.iloc[i, j]:.2f}",
+#                         ha='center', va='center', color='black', fontsize=14)
+                
+#     # Adjust ticks and labels for readability
+#     plt.xticks(fontsize=14, rotation=45)  # Rotate ticks if necessary
+#     plt.yticks(fontsize=14, rotation=45)  # Rotate ticks if necessary
+
+#     # Add axis labels and title
+#     plt.xlabel("Test Data", fontsize=16, labelpad=15)
+#     plt.ylabel("Training Data", fontsize=16, labelpad=15)
+#     plt.title(f"Heatmap of {probe_type} Accuracy {dataset_name} for {model_name}",
+#               fontsize=18, pad=25)
+    
+#     # Optionally save the figure
+#     if savepath: 
+#         plt.savefig(savepath, bbox_inches='tight', dpi=300)  # High DPI for better quality
+    
+#     plt.show()
+
 
 
     
