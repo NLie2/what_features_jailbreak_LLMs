@@ -105,16 +105,21 @@ def train_logistic_regression_model(data, labels, split_idx):
     
     return log_model
   
-def evaluate_logistic_regression_model(log_model, data, labels, split_idx):
-    
+def evaluate_model(model, data, labels, split_idx= 0):
+
+    print("eval fn")
     x_test = data[split_idx:]
     y_test = labels[split_idx:]
     
-    accuracy = log_model.score(x_test, y_test)
+    print(x_test, y_test)
+    
+    accuracy = model.score(x_test, y_test)
+    
+    print(accuracy)
 
     return accuracy
 
-
+  
 def get_validation_data(data_type, layer_idx, split_idx, y_col='score'):
     '''
     input: layer_idx (int), split_idx (int)
@@ -213,14 +218,7 @@ def create_mlp_model(data, labels, split_idx, hidden_layer_sizes=(8,), max_iter=
 
     return mlp_model, train_accuracy, test_accuracy
   
-  
-def evaluate_mlp_model(mlp_model, data, labels, split_idx): 
-    x_test = data[split_idx:]
-    y_test = labels[split_idx:]
-    
-    accuracy = mlp_model.score(x_test, y_test)
-    
-    return accuracy 
+
   
 
 
@@ -297,39 +295,37 @@ def probe_transfer(df, probe_type, layer):
       # print(len(train_data))
       
       if probe_type == "logistic_regression":
-          accuracy = evaluate_logistic_regression_model(probe, test_data, labels, split_idx)
+          accuracy = evaluate_model(probe, test_data, labels, split_idx)
           results_df.loc[jailbreak_1, jailbreak_2] = accuracy
       elif probe_type == "MLP":
-          accuracy = evaluate_mlp_model(probe, test_data, labels, split_idx)
+          accuracy = evaluate_model(probe, test_data, labels, split_idx)
           results_df.loc[jailbreak_1, jailbreak_2] = accuracy        
     
   return results_df
 
 
 def holdout_transfer_graph(holdout_df, dataset_name, model_name, layer, probe_type, mean_tranfer_score = None, savepath=None):
-    # Reset the index
+    
+    
     holdout_df = holdout_df.reset_index()
-
     # Rename the index column to 'Technique'
-    holdout_df = holdout_df.rename(columns={'index': 'Technique'})
-
-    # Select relevant columns
-    holdout_df = holdout_df[['Technique', 'Train Set', 'Test Set (Holdout)', 'Test Set SE', 'Test Size']]
+    holdout_df = holdout_df.rename(columns={'index': 'technique'})
+    'test accuracy w holdout var'
 
     # Set 'Technique' as the index
-    holdout_df.set_index('Technique', inplace=True)
+    holdout_df.set_index('technique', inplace=True)
 
     # Format the y-tick labels: replace '_' with ' ' and title case
     holdout_df.index = [label.replace('_', ' ').title().replace("Gcg", "GCG").replace("Aim", "AIM") for label in holdout_df.index]
-
+    
     # Extract accuracy values and standard errors
-    test_accuracy = holdout_df['Test Set (Holdout)']
-    train_accuracy = holdout_df['Train Set']
-    test_se = holdout_df['Test Set SE']
-    test_size = holdout_df['Test Size']
+    test_accuracy = holdout_df['test accuracy w holdout var']
+    train_accuracy = holdout_df['test accuracy w/o holdout var']
+    test_se = holdout_df['test accuracy SE w holdout var']
+    test_size = holdout_df['test size w holdout var']
 
     # Plot the bar plot with adjusted bar height and width
-    ax = holdout_df[['Train Set', 'Test Set (Holdout)']].plot(kind='barh', 
+    ax = holdout_df[['test accuracy w/o holdout var', 'test accuracy w holdout var']].plot(kind='barh', 
                                                               figsize=(15, 12), 
                                                               color=['skyblue', 'salmon'], 
                                                               linewidth=0.5, 
@@ -364,7 +360,7 @@ def holdout_transfer_graph(holdout_df, dataset_name, model_name, layer, probe_ty
     plt.figtext(0.5, -0.1, f'Mean Test Accuracy {mean_tranfer_score}\n{model_name.replace("-", " ").title()} (Layer {layer})', ha='center', fontsize=fontsize1, style='italic')
 
     # Move the legend underneath the graph
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), fontsize=fontsize2, ncol=2)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), fontsize=fontsize2, ncol=1)
 
     # Add a red vertical line at 0.50 for accuracy threshold
     plt.axvline(x=0.50, color='red', linestyle='--', linewidth=2, label="Threshold 0.50")
@@ -448,9 +444,9 @@ def transfer_with_holdout(df, probe_type, layer):
     # print(len(train_data))
     
     if probe_type == "logistic_regression":
-      test_accuracy = evaluate_logistic_regression_model(probe, test_data, labels, split_idx)
+      test_accuracy = evaluate_model(probe, test_data, labels, split_idx)
     elif probe_type == "MLP":
-      test_accuracy = evaluate_mlp_model(probe, test_data, labels, split_idx)
+      test_accuracy = evaluate_model(probe, test_data, labels, split_idx)
 
     holdout_df.loc[i, "Test Set (Holdout)"] = test_accuracy
     print(test_accuracy)
@@ -458,57 +454,82 @@ def transfer_with_holdout(df, probe_type, layer):
   return holdout_df
   
 
-
 def transfer_with_holdout_with_errors(df, probe_type, layer):
   
-    # jailbreak_dfs = split_dataset_by_jailbreak(df)
-    holdout_df = pd.DataFrame(columns=["Train Set", "Test Set (Holdout)", "Test Set SE", "Test Size"], index=df['jailbreak_prompt_name'].unique())
-  
+    # Initialize a DataFrame to store results
+    holdout_df = pd.DataFrame(columns=[
+        "test accuracy w/o holdout var", 
+        "test accuracy SE w/o holdout var", 
+        "test size w/o holdout var", 
+        "test accuracy w holdout var", 
+        "test accuracy SE w holdout var", 
+        "test size w holdout var"
+    ], index=df['jailbreak_prompt_name'].unique())
   
     for i in df['jailbreak_prompt_name'].unique():
-        df_holdout = df[df['jailbreak_prompt_name'] != i]
+        # Split dataset into holdout and non-holdout
+        df_wo_holdout_var = df[df['jailbreak_prompt_name'] != i]
+        df_w_holdout_var = df[df['jailbreak_prompt_name'] == i]
+        print("len df wo holdout: ", len(df_wo_holdout_var), "len df w holdout: ", len(df_w_holdout_var))
         print("Holdout: ", i)
         
-        # Get value counts for for rating_binary
+        # Get value counts for 'rating_binary' before balancing
         print("before balancing")
-        print(df_holdout["rating_binary"].value_counts())
+        print(df_wo_holdout_var["rating_binary"].value_counts())
         
-        
-        # Shuffle and balance all dfs
-        df_holdout = balance_dataset(df_holdout, "rating_binary")
-        # Get value counts for for rating_binary
+        # Shuffle and balance the dataset (without the holdout group)
+        df_wo_holdout_var = balance_dataset(df_wo_holdout_var, "rating_binary")
         print("after balancing")
-        print(df_holdout["rating_binary"].value_counts())
+        print(df_wo_holdout_var["rating_binary"].value_counts())
         
-        # shuffle dataset 
-        df_holdout = df_holdout.sample(frac=1).reset_index(drop=True)
-        split_idx = int(0.8 * len(df_holdout))
-        labels = df_holdout["rating_binary"].to_list()
-        data = df_holdout[f'layer_{layer}'].to_list()
+        # Shuffle the dataset
+        df_wo_holdout_var = df_wo_holdout_var.sample(frac=1).reset_index(drop=True)
+        split_idx = int(0.8 * len(df_wo_holdout_var))
         
+        # Prepare data and labels for training and testing
+        labels_wo_holdout_var = df_wo_holdout_var["rating_binary"].to_list()
+        data_wo_holdout_var = df_wo_holdout_var[f'layer_{layer}'].to_list()
         
+        # Train the model and get test accuracy without the holdout group
         if probe_type == "logistic_regression":
-            probe, train_accuracy, test_accuracy = create_logistic_regression_model(data, labels, split_idx)
-
-        elif probe_type == "MLP": 
-            probe, train_accuracy, test_accuracy = create_mlp_model(data, labels, split_idx)
-
-        holdout_df.loc[i,"Train Set", ] = train_accuracy
-        print(train_accuracy)
-        holdout_df.loc[i,"Test Set", ] = train_accuracy
-        print(test_accuracy)
+            probe, _, test_accuracy_wo_holdout = create_logistic_regression_model(data_wo_holdout_var, labels_wo_holdout_var, split_idx)
+        elif probe_type == "MLP":
+            probe, _, test_accuracy_wo_holdout = create_mlp_model(data_wo_holdout_var, labels_wo_holdout_var, split_idx)
         
-        # Calculate standard error for the test accuracy
-        n_test_samples = len(labels)  # number of samples in the test set
-        test_se = np.sqrt((test_accuracy * (1 - test_accuracy)) / n_test_samples)
+        # Calculate the standard error for the test accuracy without the holdout group
+        n_test_samples_wo_holdout = len(labels_wo_holdout_var)  # number of samples in the test set
+        test_se_wo_holdout = np.sqrt((test_accuracy_wo_holdout * (1 - test_accuracy_wo_holdout)) / n_test_samples_wo_holdout)
 
-        holdout_df.loc[i, "Test Set (Holdout)"] = test_accuracy
-        holdout_df.loc[i, "Test Set SE"] = test_se
-        holdout_df.loc[i, "Test Size"] = n_test_samples
+        # Store results in holdout_df
+        holdout_df.loc[i, "test accuracy w/o holdout var"] = test_accuracy_wo_holdout
+        holdout_df.loc[i, "test accuracy SE w/o holdout var"] = test_se_wo_holdout
+        holdout_df.loc[i, "test size w/o holdout var"] = n_test_samples_wo_holdout
         
-        print(f"Test Accuracy: {test_accuracy}, SE: {test_se}")
-  
+        ##### Transfer to the holdout group #####
+        labels_w_holdout_var = df_w_holdout_var["rating_binary"].to_list()
+        data_w_holdout_var = df_w_holdout_var[f'layer_{layer}'].to_list()
+        
+        # Evaluate the model on the holdout set
+        if probe_type == "logistic_regression":
+            test_accuracy_w_holdout = evaluate_model(probe, data_w_holdout_var, labels_w_holdout_var)
+        elif probe_type == "MLP":
+            test_accuracy_w_holdout = evaluate_model(probe, data_w_holdout_var, labels_w_holdout_var)
+        
+        # Calculate the standard error for the test accuracy with the holdout group
+        n_test_samples_w_holdout = len(labels_w_holdout_var)  # number of samples in the test set
+        test_se_w_holdout = np.sqrt((test_accuracy_w_holdout * (1 - test_accuracy_w_holdout)) / n_test_samples_w_holdout)
+
+        # Store results in holdout_df
+        holdout_df.loc[i, "test accuracy w holdout var"] = test_accuracy_w_holdout
+        holdout_df.loc[i, "test accuracy SE w holdout var"] = test_se_w_holdout
+        holdout_df.loc[i, "test size w holdout var"] = n_test_samples_w_holdout
+        
+        # Print the results for the current group
+        print(f"Test Accuracy without holdout: {test_accuracy_wo_holdout}, SE: {test_se_wo_holdout}")
+        print(f"Test Accuracy with holdout: {test_accuracy_w_holdout}, SE: {test_se_w_holdout}")
+        
     return holdout_df
+
 
 
 def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath=None):
@@ -586,80 +607,6 @@ def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath=
     
     plt.show()
     
-# def transfer_heatmap(results_df, dataset_name, model_name, probe_type, savepath=None):
-#     # Compute the mean of each row and each column
-#     row_means = results_df.mean(axis=1)
-#     col_means = results_df.mean(axis=0)
-
-#     # Sort the row and column indexes by their means
-#     sorted_rows = row_means.sort_values(ascending=False).index
-#     sorted_cols = col_means.sort_values(ascending=True).index
-
-#     # Reorder the DataFrame based on sorted rows and columns
-#     results_df = results_df.loc[sorted_rows, sorted_rows]
-
-#     # Append row means and column means to the DataFrame
-#     results_df['Test Mean'] = row_means[sorted_rows]
-#     col_means_sorted = col_means[sorted_rows]
-#     results_df.loc['Training Mean'] = col_means_sorted
-
-#     # Set the "row mean" of the "column means" cell to NaN to exclude it from the heatmap
-#     results_df.loc['Training Mean', 'Test Mean'] = np.nan
-
-#     # Replace NaN with 0, except for the special NaN we just created
-#     results_df = results_df.fillna(0)
-#     results_df.loc['Training Mean', 'Test Mean'] = np.nan
-
-#     # Create a mask for values below 0.50 with the new DataFrame shape
-#     mask = results_df < 0.51
-
-#     # Create a mask to highlight the row and column means
-#     highlight_mask = pd.DataFrame(False, index=results_df.index, columns=results_df.columns)
-#     highlight_mask.iloc[-1, :] = True  # Last row for row means
-#     highlight_mask.iloc[:, -1] = True  # Last column for column means
-    
-#     # Mask the specific "row mean" of the "column means" cell
-#     highlight_mask.loc['Training Mean', 'Test Mean'] = True
-
-#     # Create a custom colormap
-#     cmap = sns.color_palette("Greens", as_cmap=True)
-#     mean_cmap = sns.light_palette("orange", n_colors=50, as_cmap=True)  # Shaded gradient for row/column means
-    
-#     # Set up the plot with a larger figure size
-#     plt.figure(figsize=(20, 18))  # Increase figure size to make cells larger
-
-#     # Plot the heatmap for the main data
-#     ax = sns.heatmap(results_df, annot=True, fmt=".2f", cmap=cmap, cbar=True, 
-#                      linewidths=.5, mask=mask & ~highlight_mask, square=False,  # Set square=False for flexibility
-#                      annot_kws={"color": "black", "fontsize": 14})  # Increase fontsize for better readability
-
-#     # Overlay the row/column means with a different color
-#     sns.heatmap(results_df, annot=True, fmt=".2f", cmap=mean_cmap, cbar=False, 
-#                 linewidths=.5, mask=~highlight_mask, square=False, 
-#                 annot_kws={"color": "black", "fontsize": 14}) 
-
-#     # Now manually annotate the masked (white) cells
-#     for i in range(results_df.shape[0]):
-#         for j in range(results_df.shape[1]):
-#             if mask.iloc[i, j]:  # Access the mask correctly with .iloc
-#                 ax.text(j + 0.5, i + 0.5, f"{results_df.iloc[i, j]:.2f}",
-#                         ha='center', va='center', color='black', fontsize=14)
-                
-#     # Adjust ticks and labels for readability
-#     plt.xticks(fontsize=14, rotation=45)  # Rotate ticks if necessary
-#     plt.yticks(fontsize=14, rotation=45)  # Rotate ticks if necessary
-
-#     # Add axis labels and title
-#     plt.xlabel("Test Data", fontsize=16, labelpad=15)
-#     plt.ylabel("Training Data", fontsize=16, labelpad=15)
-#     plt.title(f"Heatmap of {probe_type} Accuracy {dataset_name} for {model_name}",
-#               fontsize=18, pad=25)
-    
-#     # Optionally save the figure
-#     if savepath: 
-#         plt.savefig(savepath, bbox_inches='tight', dpi=300)  # High DPI for better quality
-    
-#     plt.show()
 
 
 
