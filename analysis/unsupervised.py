@@ -21,7 +21,8 @@ def visualize_act_with_t_sne(model_name, tensors_flat, labels, dataset_name, num
     tensors_tsne = tsne.fit_transform(tensors_flat)
 
     # Ensure that the number of labels matches the number of samples in tensors_tsne
-    assert len(labels) == tensors_tsne.shape[0], "The number of labels must match the number of samples in tensors_tsne."
+
+    assert len(labels) == tensors_tsne.shape[0], f"The number of labels {len(labels)} must match the number of samples {len(tensors_tsne.shape[0])} in tensors_tsne."
 
     # Plot the t-SNE results with different colors for different labels
     plt.figure(figsize=(10, 8))
