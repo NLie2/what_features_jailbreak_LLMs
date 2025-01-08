@@ -434,7 +434,7 @@ class TransformerProbe(nn.Module):
             TransformerProbe: Loaded model with restored weights and scaler
         """
         # Load the saved dictionary
-        save_dict = torch.load(f"{load_path}.pt")
+        save_dict = torch.load(f"{load_path}")
         
         # Create a new instance of the model
         model = cls(input_size=save_dict['input_size'])

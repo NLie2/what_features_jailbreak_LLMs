@@ -40,7 +40,7 @@ def get_res_layers_to_enumerate(model):
         return model.gpt_neox.layers
     elif 'bert' in model_name:
         return model.encoder.layer
-    elif 'Mistral' in model_name:
+    elif 'mistral' in model_name:
         return model.model.layers
     elif 'gemma' in model_name:
         return model.model.layers

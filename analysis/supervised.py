@@ -472,7 +472,7 @@ def transfer_with_holdout_with_errors(df, probe_type, layers, input_size = None)
             test_accuracy_wo_holdout, _ = trans_probe.get_accuracy(test_data = test_data, test_labels = test_labels)
 
             # Calculate the standard error for the test accuracy without the holdout group
-        n_test_samples_wo_holdout = len(df_wo_holdout_var)  # number of samples in the test set
+        n_test_samples_wo_holdout = len(test_data)  # number of samples in the test set
         test_se_wo_holdout = np.sqrt((test_accuracy_wo_holdout * (1 - test_accuracy_wo_holdout)) / n_test_samples_wo_holdout)
 
         # Store results in holdout_df
@@ -485,8 +485,12 @@ def transfer_with_holdout_with_errors(df, probe_type, layers, input_size = None)
         
         # data_w_holdout_var = df_w_holdout_var[f'layer_{layer}'].to_list()
         
-        train_data, train_labels, test_data, test_labels = get_data_and_labels_multilayer_aggregate(df = df_w_holdout_var, layers = layers, split_idx = 0.8, agg_method="mean")
+        #no training data needed for holdout group
+        _, _, test_data, test_labels = get_data_and_labels_multilayer_aggregate(df = df_w_holdout_var, layers = layers, split_idx = 0, agg_method="mean")
         
+        print(len(test_data))
+        
+        #
         # Evaluate the model on the holdout set
         if probe_type == "logistic_regression":
             test_accuracy_w_holdout = evaluate_model(probe, test_data, test_labels)
@@ -499,7 +503,7 @@ def transfer_with_holdout_with_errors(df, probe_type, layers, input_size = None)
 
        
         # Calculate the standard error for the test accuracy with the holdout group
-        n_test_samples_w_holdout = len(df_w_holdout_var)  # number of samples in the test set
+        n_test_samples_w_holdout = len(test_data)  # number of samples in the test set
         test_se_w_holdout = np.sqrt((test_accuracy_w_holdout * (1 - test_accuracy_w_holdout)) / n_test_samples_w_holdout)
 
         # Store results in holdout_df

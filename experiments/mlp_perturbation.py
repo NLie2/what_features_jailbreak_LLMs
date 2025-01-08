@@ -20,16 +20,16 @@ model_name = "google/gemma-7b-it"
 layer=17
 
 
-model = AutoModelForCausalLM.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda")
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
-probe_path = "/experiments/nathaly/mlp_probe_weights.pth"
+probe_path = "/data/nathalie_maria_kirch/ERA_Fellowship/datasets/Probes/gemma-7b-it/mlp_probe_weights.pth"
 
 
 # Load validation data
-df_val_adv = pd.read_pickle("/datasets/latest/validation_data.pkl")
-df_val_bng = pd.read_pickle("/datasets/latest/validation_data_benign.pkl")
+# df_val_adv = pd.read_pickle("/datasets/latest/validation_data.pkl")
+# df_val_bng = pd.read_pickle("/datasets/latest/validation_data_benign.pkl")
 
 
 
@@ -157,8 +157,7 @@ def get_response_MLP(model,
               mlp_out_value = mlp_out.item()
               
               # target_out = torch.zeros_like(mlp_out)  # Default to zero, or choose an appropriate value
-              if offensive == True:
-
+              if offensive:
                   # target = mlp_out_value + c
                   target = max(mlp_out_value+c, c) # if out is very negative, target is c
 
@@ -168,6 +167,7 @@ def get_response_MLP(model,
               
               
               if not printed_once: 
+ 
                 print("target = ", target)
                 printed_once = True
 
@@ -244,20 +244,24 @@ mlp.load_model(probe_path)
 
 mlp.train()
 
+mlp.to("cuda")
 
 
-df = pd.read_pickle("/datasets/latest/validation_data.pkl")
+# df = pd.read_pickle("/datasets/latest/validation_data.pkl")
 
-c = 10
+df = pd.read_pickle("/data/nathalie_maria_kirch/ERA_Fellowship/datasets/haize/jailbreak_prompts_nathalie_cas_haize_1.pkl")
+
+c = 1.5
 lr = 0.005
 nr_perturbations = 34
+
 for index, row in df.iterrows():
-    response = get_response_MLP(model, tokenizer, row["jailbreak_prompt_text"], mlp, max_new_tokens=200, layers_to_intervene=[16], c = c, loss = "MSE", nr_perturbations = nr_perturbations, learning_rate=lr, offensive = True)
+    response = get_response_MLP(model, tokenizer, row["jailbreak_prompt_text"], mlp, max_new_tokens=200, layers_to_intervene=[16], c = c, loss = "MSE", nr_perturbations = nr_perturbations, learning_rate=lr, offensive = False)
     df.at[index, "mlp_intervention_response"] = response
     print(response)
 
 
-path = f"/datasets/latest/c/offensive_mlp_intervention_c={c}_lr={lr}_nr_p={nr_perturbations}.pkl"
+path = f"/data/nathalie_maria_kirch/ERA_Fellowship/datasets/gemma-7b-it/haize/harmful/defensive_mlp_intervention_c={c}_lr={lr}_nr_p={nr_perturbations}.pkl"
 df.to_pickle(path)
 
 print(path)

@@ -13,6 +13,13 @@ models = {
         "input_size": 4096,
         
     },
+    
+    "Llama-3.2-3B-Instruct": {
+      "hf-identifier": "meta-llama/Llama-3.2-3B-Instruct",
+      "num_layers": 28,
+      "rating_column": "rating_output_text",
+      "input_size": 3072,
+      }, 
     "Ministral-8B-Instruct": {
         "hf-identifier": "mistralai/Ministral-8B-Instruct-2410",
         "num_layers": 36,
