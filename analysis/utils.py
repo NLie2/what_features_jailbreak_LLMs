@@ -10,6 +10,19 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from analysis.unsupervised import *
 from analysis.supervised import *
 
+def check_all_parameters(model):
+  return all(p.device.type == 'cuda' for p in model.parameters())
+
+
+def check_hflm_model_devices(hflm_model):
+    print("HF Model device check:", check_all_parameters(hflm_model.model))
+    for name, param in hflm_model.model.named_parameters():
+        # print(f"{name} on {param.device}")
+        if param.device.type != 'cuda':
+            # print(f"Parameter {name} is not on GPU")
+            return False
+    return True
+  
 def fix_wei_dataset(df, layer=17, activation_column="prompt_res_activations", shuffle=True):
     def extract_layer(row, layer):
         return row[activation_column][layer][0].cpu().numpy().flatten()

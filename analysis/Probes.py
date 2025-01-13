@@ -90,78 +90,6 @@ class SimpleMLP(nn.Module):
       return losses, accuracies
 
 
-    # def get_accuracy(self, test_data, test_labels):
-      
-    #     device = next(self.parameters()).device
-        
-    #     # Apply scaler if it was fitted during training
-    #     if hasattr(self.scaler, 'mean_'):
-    #         print("Applying fitted scaler to test data...")
-    #         X_test = self.scaler.transform(test_data)
-    #     else:
-    #         print("No fitted scaler found, using raw data.")
-    #         X_test = test_data
-
-    #     # Convert to torch tensors
-    #     X_test = torch.tensor(X_test, dtype=torch.float32).to(device)
-    #     y_test = torch.tensor(test_labels, dtype=torch.float32).to(device)
-
-    #     # Set the model to evaluation mode
-    #     self.eval()
-
-    #     # Make predictions
-    #     with torch.no_grad():  # Disable gradient calculation
-    #         y_pred = self(X_test)
-
-    #         # Apply sigmoid to get probabilities
-    #         y_probabilities = torch.sigmoid(y_pred)
-
-    #         # Convert probabilities to binary labels (threshold at 0.5)
-    #         y_pred_labels = (y_probabilities > 0.5).float()
-
-    #     # Convert to numpy for compatibility with sklearn's accuracy_score
-    #     y_test_np = y_test.cpu().numpy()
-    #     y_pred_labels_np = y_pred_labels.cpu().numpy()
-
-    #     # Calculate accuracy
-    #     self.accuracy = accuracy_score(y_test_np, y_pred_labels_np)
-    #     print(f'Accuracy: {self.accuracy:.4f}')
-    #     return self.accuracy
-    
-
-    #     # Apply scaler if it was fitted during training
-    #     if hasattr(self.scaler, 'mean_'):
-    #         print("Applying fitted scaler to test data...")
-    #         X_test = self.scaler.transform(test_data)
-    #     else:
-    #         print("No fitted scaler found, using raw data.")
-
-    #     # Convert to torch tensors
-    #     X_test = torch.tensor(X_test, dtype=torch.float32)
-    #     y_test = torch.tensor(test_labels, dtype=torch.float32)
-
-    #     # Set the model to evaluation mode
-    #     self.eval()
-
-    #     # Make predictions
-    #     with torch.no_grad():  # Disable gradient calculation
-    #         y_pred = self(X_test)
-
-    #         # Apply sigmoid to get probabilities
-    #         y_probabilities = torch.sigmoid(y_pred)
-
-    #         # Convert probabilities to binary labels (threshold at 0.5)
-    #         y_pred_labels = (y_probabilities > 0.5).float()
-
-    #     # Convert to numpy for compatibility with sklearn's accuracy_score
-    #     y_test_np = y_test.numpy()
-    #     y_pred_labels_np = y_pred_labels.numpy()
-
-    #     # Calculate accuracy
-    #     self.accuracy = accuracy_score(y_test_np, y_pred_labels_np)
-    #     print(f'Accuracy: {self.accuracy:.4f}')
-    #     return self.accuracy
-    
     def get_accuracy(self, test_data, test_labels, verbose = False):
       
       print(len(test_data), len(test_labels))
@@ -196,12 +124,12 @@ class SimpleMLP(nn.Module):
         
       return self.accuracy, conf_matrix
     
-    def load_model(self, file_path, map_location=None):
+    def load_probe(self, file_path, map_location=None):
       self.load_state_dict(torch.load(file_path, map_location=map_location))
       self.eval()
       print(f"Model weights loaded from {file_path}!")
       
-    def save_model(self, file_path):
+    def save_probe(self, file_path):
       torch.save(self.state_dict(), file_path)
       print(f"Model weights saved to {file_path}!")
       
@@ -209,72 +137,6 @@ class SimpleMLP(nn.Module):
     
 
 ########TRANSFORMER PROBE########
-
-# class TransformerProbe(nn.Module):
-#     def __init__(self, input_size=4096, nhead=8, num_layers=2):
-#         super(TransformerProbe, self).__init__()
-#         self.input_size = input_size
-#         self.d_model = 256
-#         self.seq_len = 11
-        
-#         # First project the input to a size divisible by seq_len
-#         self.input_projection = nn.Linear(input_size, self.seq_len * self.d_model)
-#         self.pos_encoder = nn.Parameter(torch.randn(1, self.seq_len, self.d_model))
-        
-#         encoder_layer = nn.TransformerEncoderLayer(
-#             d_model=self.d_model,
-#             nhead=nhead,
-#             dim_feedforward=512,
-#             dropout=0.1,
-#             batch_first=True
-#         )
-        
-#         self.transformer_encoder = nn.TransformerEncoder(
-#             encoder_layer,
-#             num_layers=num_layers
-#         )
-        
-#         self.fc = nn.Linear(self.d_model, 1)
-#         self.scaler = StandardScaler()
-#         self.accuracy = 0
-#         self.cuda()
-   
-    # def forward(self, x):
-    #     batch_size = x.shape[0]
-        
-    #     # Project and reshape to [batch_size, seq_len, d_model]
-    #     x = self.input_projection(x)
-    #     x = x.view(batch_size, self.seq_len, self.d_model)
-        
-    #     # Add positional encoding
-    #     x = x + self.pos_encoder
-        
-    #     # Pass through transformer
-    #     x = self.transformer_encoder(x)
-        
-    #     # Average pooling
-    #     x = torch.mean(x, dim=1)
-        
-    #     # Final classification
-    #     x = self.fc(x)
-    #     return x
-
-    # def train_probe(self, train_data, train_labels, num_epochs=500):
-    #     # Check if CUDA is available and set device
-    #     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    #     print(f"Using device: {device}")
-        
-    #     # Ensure model is on the correct device
-    #     self = self.to(device)
-    #     self.train()
-        
-    #     X_train = self.scaler.fit_transform(train_data)
-    #     # Move data to device
-    #     X_train = torch.tensor(X_train, dtype=torch.float32).to(device)
-    #     y_train = torch.tensor(train_labels, dtype=torch.float32).to(device)
-        
-    #     criterion = nn.BCEWithLogitsLoss().to(device)
-    #     optimizer = optim.AdamW(self.parameters(), lr=0.001)
    
 class TransformerProbe(nn.Module):
     def __init__(self, input_size=4096, nhead=8, num_layers=2):

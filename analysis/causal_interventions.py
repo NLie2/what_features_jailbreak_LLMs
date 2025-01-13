@@ -1,6 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import os
+import json
+import pandas as pd
+from pathlib import Path
 from gen_data.get_activations import get_res_layers_to_enumerate
 
 
@@ -534,7 +538,177 @@ def insert_transformer_hook(model,
         hooks.append(hook_handle)
   
  
+#  #### CAPABILITY CHECKS 
+# def update_json_file(file_path, key_string, result):
+#     """
+#     Updates or creates a JSON file with new key-value pairs.
+    
+#     Args:
+#         file_path (str): Path to the JSON file
+#         key_string (str): Key to be added/updated in the JSON
+#         result: Value to be stored for the key
+    
+#     Returns:
+#         dict: The updated dictionary that was written to the file
+#     """
+#     # Initialize existing_data
+#     existing_data = {}
+    
+#     # Create directory structure if it doesn't exist
+#     os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    
+#     # Check if the file exists and has content
+#     if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+#         try:
+#             with open(file_path, 'r') as json_file:
+#                 existing_data = json.load(json_file)
+#         except json.JSONDecodeError:
+#             # If the file exists but is not valid JSON, start fresh
+#             existing_data = {}
+    
+#     # Add the new key-value pair
+#     existing_data[key_string] = result
+    
+#     # Write back to the JSON file (will create it if it doesn't exist)
+#     with open(file_path, 'w') as json_file:
+#         json.dump(existing_data, json_file, indent=4)
+    
+#     return existing_data
  
+def update_json_file(file_path, key_string, result):
+    """
+    Updates or creates a JSON file with new key-value pairs, handling permission errors.
+    
+    Args:
+        file_path (str): Path to the JSON file
+        key_string (str): Key to be added/updated in the JSON
+        result: Value to be stored for the key
+    
+    Returns:
+        tuple: (dict, str) The updated dictionary and the path where it was written
+    """
+    
+    print(f"try filepath {file_path}")
+    def try_write_to_path(path):
+        # Initialize existing_data
+        existing_data = {}
+        try:
+            # Create directory structure if it doesn't exist
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            
+            # Check if the file exists and has content
+            if os.path.exists(path) and os.path.getsize(path) > 0:
+                try:
+                    with open(path, 'r') as json_file:
+                        existing_data = json.load(json_file)
+                except json.JSONDecodeError:
+                    # If the file exists but is not valid JSON, start fresh
+                    existing_data = {}
+            
+            # Add the new key-value pair
+            existing_data[key_string] = result
+            
+            # Write back to the JSON file
+            with open(path, 'w') as json_file:
+                json.dump(existing_data, json_file, indent=4)
+            
+            return True, existing_data
+        except PermissionError:
+            return False, None
+    
+    # Try original path first
+    success, data = try_write_to_path(file_path)
+    if success:
+        return data, file_path
+    
+    # If original path fails, try user's home directory
+    home_path = os.path.join(os.path.expanduser('~'), 'experiment_results', 
+                            os.path.basename(os.path.dirname(file_path)),
+                            os.path.basename(file_path))
+    success, data = try_write_to_path(home_path)
+    if success:
+        print(f"Warning: Could not write to {file_path}")
+        print(f"Writing to alternative location: {home_path}")
+        return data, home_path
+    
+    # If home directory fails, try temporary directory
+    import tempfile
+    temp_path = os.path.join(tempfile.gettempdir(), 
+                            f"capabilities_{os.path.basename(os.path.dirname(file_path))}_{os.path.basename(file_path)}")
+    success, data = try_write_to_path(temp_path)
+    if success:
+        print(f"Warning: Could not write to {file_path} or {home_path}")
+        print(f"Writing to temporary location: {temp_path}")
+        return data, temp_path
+    
+    raise PermissionError(f"Could not write to any location: {file_path}, {home_path}, or {temp_path}")
+ 
+def save_experiment_params(project_root, model_name, capability, probe_path=None, c=None, offensive=None, learning_rate=None):
+    """
+    Save experiment parameters to a CSV file. Creates a new file if it doesn't exist.
+    
+    Parameters:
+    -----------
+    model_name : str
+        Name of the model being used
+    probe_path : str or Path, optional
+        Path to the probe file
+    c : float, optional
+        Strength parameter
+    offensive : bool, optional
+        Whether the experiment is offensive (True) or defensive (False)
+    learning_rate : float, optional
+        Learning rate used in the experiment
+    """
+    # Create the data directory if it doesn't exist
+    data_dir = project_root / 'datasets' / model_name
+    data_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Define the CSV file path
+    csv_path = data_dir / 'experiment_params.csv'
+    
+    # Determine probe type from probe_path
+    if probe_path:
+        if "linear" in str(probe_path):
+            probe_type = "linear"
+        elif "mlp" in str(probe_path):
+            probe_type = "mlp"
+        elif "transformer" in str(probe_path):
+            probe_type = "transformer"
+        else:
+            probe_type = "unknown"
+    else:
+        probe_type = None
+    
+    # Determine offensive/defensive status
+    experiment_type = "offensive" if offensive else "defensive"
+    
+    # Create new experiment data
+    new_data = {
+        'model': [model_name],
+        'capability': [capability],
+        'probe_type': [probe_type],
+        'probe_path': [probe_path],
+        'offensive_defensive': [experiment_type],
+        'c_strength': [c],
+        'lr': [learning_rate]
+    }
+    
+    new_df = pd.DataFrame(new_data)
+    
+    # If file exists, append to it; if not, create new file
+    if csv_path.exists():
+        existing_df = pd.read_csv(csv_path)
+        updated_df = pd.concat([existing_df, new_df], ignore_index=True)
+    else:
+        updated_df = new_df
+    
+    # Save to CSV
+    updated_df.to_csv(csv_path, index=False)
+    print(f"Saved experiment parameters to {csv_path}")
+
+
+
  #### LEGACY 
   
   # def get_response(model, 
