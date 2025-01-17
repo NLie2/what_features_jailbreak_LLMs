@@ -25,3 +25,5 @@ analysis/check_asrs
 analysis/figure_generation
 logs/
 datasets/
+.env
+__pycache__/
