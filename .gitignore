@@ -1,11 +1,12 @@
 analysis/finetuning/finetuned_models/*
 analysis/finetuning/final_model/*
 analysis/finetuning/wandb/*
-!analysis/finetuning/*.ipynb
+
 
 *.ipynb
 !analysis/notebooks/*.ipynb
 !gen_data/get_dataset.ipynb
+!analysis/finetuning/*.ipynb
 *.env
 *.pkl
 *.csv

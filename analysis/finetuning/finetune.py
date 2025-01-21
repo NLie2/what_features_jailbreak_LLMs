@@ -90,7 +90,9 @@ def main():
     model, tokenizer = get_model_and_tokenizer(model_name)
     
     # Data preparation
-    df = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/{model_name.replace('/','_')}/jailbreak_refusals.csv")
+    df1 = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/{model_name.replace('/','_')}/jailbreak_with_refusals.csv")
+    df2 = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/ultrachat_10k_samples.csv")[:1000]
+    df = pd.concat([df1, df2])
     train_dataset, eval_dataset = prepare_dataset(df, tokenizer)
     tokenized_train_dataset = prepare_tokenized_dataset(train_dataset, tokenizer)
     tokenized_eval_dataset = prepare_tokenized_dataset(eval_dataset, tokenizer)
@@ -101,11 +103,11 @@ def main():
     # Training setup
     training_args = TrainingArguments(
         output_dir=f"./finetuned_models/{model_name.replace('/', '_')}",
-        num_train_epochs=3,
+        num_train_epochs=1,
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
-        warmup_steps=100,
-        learning_rate=2e-4,
+        warmup_steps=50,
+        learning_rate=5e-4,
         fp16=True,
         logging_steps=10,
         evaluation_strategy="steps",
