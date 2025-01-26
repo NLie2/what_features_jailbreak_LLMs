@@ -9,20 +9,46 @@ from peft import (
     get_peft_model
 )
 import wandb
+import torch
 
-def prepare_dataset(df):
+def prepare_dataset_to_messages(df):
     # Convert to the format expected by apply_chat_template
-    conversations = []
+    messages = []
     for _, row in df.iterrows():
-        conversations.append([
+        messages.append([
             {"role": "user", "content": row['golden_input']},
             {"role": "assistant", "content": row['golden_output']}
         ])
     
     # Create dataset with conversations
-    dataset = Dataset.from_pandas(pd.DataFrame({"messages": conversations}))
+    dataset = Dataset.from_pandas(pd.DataFrame({"messages": messages}))
     split_dataset = dataset.train_test_split(test_size=0.2, seed=42)
     return split_dataset['train'], split_dataset['test']
+
+def prepare_dataset_to_text(dataset, tokenizer):
+    def apply_template(example):
+        chat = example["messages"]
+        return {"text": tokenizer.apply_chat_template(chat, tokenize=False)}
+    # Apply the official chat template
+    dataset = dataset.map(apply_template, remove_columns=dataset.column_names)
+    return dataset
+
+def tokenize_function(examples, tokenizer, max_length=512):
+    return tokenizer(
+        examples['text'],
+        truncation=True,
+        max_length=max_length,
+        padding='max_length',
+        return_tensors='pt'
+    )
+
+def prepare_dataset_to_tokens(dataset, tokenizer):
+    return dataset.map(
+        lambda x: tokenize_function(x, tokenizer),
+        batched=True,
+        remove_columns=dataset.column_names,
+        batch_size=8
+    ).with_format("torch")
 
 def get_model_and_tokenizer(model_id):
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
@@ -62,7 +88,7 @@ def main():
     df1 = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/{model_name.replace('/','_')}/jailbreak_with_refusals.csv")
     df2 = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/ultrachat_10k_samples.csv")[:1000]
     df = pd.concat([df1, df2])
-    train_dataset, eval_dataset = prepare_dataset(df)
+    train_dataset_messages, eval_dataset_messages = prepare_dataset_to_messages(df)
     # train_dataset = train_dataset.select([1])
 
 
@@ -77,23 +103,28 @@ def main():
         response_template=proposed_response_template
     )
 
-
-
     training_args = SFTConfig(
         output_dir=f"./finetuned_models/{model_name.replace('/', '_')}_SFT",
         num_train_epochs=1,
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
+        warmup_steps=50,
         learning_rate=5e-4,
-        max_seq_length=1024,
         fp16=True,
+        logging_steps=10,
+        evaluation_strategy="steps",
+        eval_steps=100,
+        save_strategy="steps",
+        save_steps=100,
+        report_to="wandb",
+        max_seq_length=1024,
     )
 
     trainer = SFTTrainer(
-        model,
+        model=model,
         args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
+        train_dataset=train_dataset_messages,
+        eval_dataset=eval_dataset_messages,
         # formatting_func=formatting_prompts_func,
         data_collator=data_collator,
     )
