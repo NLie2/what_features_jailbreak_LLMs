@@ -109,7 +109,7 @@ def generate_responses_batched(model, tokenizer, prompts, batch_size=8, max_new_
                 # temperature=0.7,
                 # top_p=0.9,
                 # repetition_penalty=1.1,
-                # do_sample=True,
+                do_sample=False,
                 pad_token_id=tokenizer.pad_token_id
             )
         
