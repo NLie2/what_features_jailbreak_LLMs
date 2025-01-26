@@ -60,36 +60,6 @@ def load_model_with_lora(
     
     return model, tokenizer
 
-def generate_response(model, tokenizer, prompt, max_new_tokens=512):
-    # Format the prompt using the chat template
-    messages = [{"role": "user", "content": prompt}]
-    formatted_prompt = tokenizer.apply_chat_template(messages, tokenize=False)
-    
-    # Tokenize
-    inputs = tokenizer(formatted_prompt, return_tensors="pt").to(model.device)
-    
-    # Get the input length in tokens
-    input_length = inputs.input_ids.shape[1]
-    
-    # Generate
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            temperature=0.7,
-            top_p=0.9,
-            repetition_penalty=1.1,
-            do_sample=True,
-            pad_token_id=tokenizer.pad_token_id
-        )
-    
-    # Decode only the new tokens
-    response = tokenizer.decode(outputs[0][input_length:], skip_special_tokens=True)
-    response = response.strip()
-    if response.startswith("assistant"):
-        response = response[len("assistant"):].strip()
-    return response
-
 def load_and_generate_responses_batched(base_model_id, lora_weights_path, prompts, batch_size=8, max_new_tokens=512):
     model, tokenizer = load_model_with_lora(base_model_id, lora_weights_path)
     return generate_responses_batched(model, tokenizer, prompts, batch_size, max_new_tokens)
