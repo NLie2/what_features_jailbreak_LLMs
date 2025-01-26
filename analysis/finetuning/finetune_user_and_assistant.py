@@ -99,12 +99,13 @@ def main():
     model_name = "meta-llama/Llama-3.2-3B-Instruct"
     model, tokenizer = get_model_and_tokenizer(model_name)
     model = setup_lora_model(model)
+    specifier = 'useralso'
     
     # Data preparation
     df1 = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/{model_name.replace('/','_')}/jailbreak_with_refusals.csv")
     df2 = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/ultrachat_10k_samples.csv")[:1000]
-    # df = pd.concat([df1, df2])
-    df = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/{model_name.replace('/','_')}/jailbreak_with_answer1.csv")
+    df = pd.concat([df1, df2])
+    # df = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/{model_name.replace('/','_')}/jailbreak_with_answer1.csv")
     df.golden_output = df.golden_output.astype(str)
     train_dataset_messages, eval_dataset_messages = prepare_dataset_to_messages(df)
     train_dataset_text = prepare_dataset_to_text(train_dataset_messages, tokenizer)
@@ -114,7 +115,7 @@ def main():
     
     # Training setup
     training_args = TrainingArguments(
-        output_dir=f"./finetuned_models/{model_name.replace('/', '_')}",
+        output_dir=f"./finetuned_models/{model_name.replace('/', '_')}_{specifier}",
         num_train_epochs=1,
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
@@ -142,7 +143,7 @@ def main():
     trainer.train()
     
     # Save the final model
-    trainer.save_model(f"./finetuned_models/{model_name.replace('/', '_')}/final_model")
+    trainer.save_model(f"./finetuned_models/{model_name.replace('/', '_')}_{specifier}/final_model")
     
 if __name__ == "__main__":
     main()
