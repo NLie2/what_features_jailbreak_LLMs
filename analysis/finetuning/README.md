@@ -1,7 +1,11 @@
 For high level understanding, go through finetune.ipynb.
 
+[Warning]: The code has not been cleaned up yet.
+
 However, in practice, I now
-1. Test the unfinetuned model with eval_finetuned.py
-2. Generate training data with the above results using finetune.ipynb and a bit of manual work to make sure I read from and save to the correct file locations.
-3. Finetune the model with the training data with finetune.py. Here I have to do some manual hyperparameter tuning.
-4. Test the finetuned model with eval_finetuned.py
+1. Run the original model on the training jailbreaks and construct a training dataset with ?.py
+2. Train a LoRa with finetune.py
+3. Test both the original model and the LoRa with eval_finetuned.py
+    1. Test if the trained model still gives ok outputs by running finetune_chat_test.ipynb
+    2. ASR on holdout dataset
+    3. Calculate MMLU
