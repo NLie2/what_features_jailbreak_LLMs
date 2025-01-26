@@ -15,6 +15,17 @@ from lm_eval import evaluator
 from lm_eval.models.huggingface import HFLM
 from tqdm import tqdm
 
+def get_pad_token(model_id,tokenizer):
+    if tokenizer.pad_token is not None:
+        return tokenizer.pad_token
+    model_to_pad_token = {
+        "meta-llama/Llama-3.2-3B-Instruct": "<|finetune_right_pad_id|>", # 128004,
+    }
+    # pad_token = tokenizer.eos_token
+    pad_token = model_to_pad_token[model_id]
+    return pad_token
+
+
 def load_model_with_lora(
     base_model_id,
     lora_weights_path=None,
@@ -29,7 +40,13 @@ def load_model_with_lora(
     
     # Load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(base_model_id)
-    tokenizer.pad_token = tokenizer.eos_token
+    # need to set the pad token, otherwise, training will fail
+    # tokenizer.pad_token = tokenizer.eos_token # if this is set, the trained model will not know when to stop generating, it will however be fine for inference of the base model
+    tokenizer.pad_token = get_pad_token(base_model_id, tokenizer)
+    # tokenizer.pad_token ="<|finetune_right_pad_id|>" # 128004
+    # tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+    # model.resize_token_embeddings(len(tokenizer))
+    # model.config.pad_token_id = tokenizer.pad_token_id
     
     if lora_weights_path is not None:
         # Load and apply LoRA weights
@@ -39,6 +56,7 @@ def load_model_with_lora(
             torch_dtype=torch.float16,
             device_map="auto"
         )
+    
     
     return model, tokenizer
 

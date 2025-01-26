@@ -51,15 +51,26 @@ def prepare_dataset_to_tokens(dataset, tokenizer):
     ).with_format("torch")
 
 def get_model_and_tokenizer(model_id):
-    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-    tokenizer.pad_token = tokenizer.eos_token
-    
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         torch_dtype=torch.float16,
         device_map="auto",
         trust_remote_code=True
     )
+
+    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+    # need to set the pad token, otherwise, training will fail
+
+    ADD_NEW_PAD_TOKEN = False
+    if ADD_NEW_PAD_TOKEN:
+        # if we do this, the trained model will have a different vocab size than the base model, which is not nice
+        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        model.resize_token_embeddings(len(tokenizer))
+        model.config.pad_token_id = tokenizer.pad_token_id
+    else:
+        # tokenizer.pad_token = tokenizer.eos_token # if this is set, the trained model will not know when to stop generating
+        tokenizer.pad_token ="<|finetune_right_pad_id|>" # 128004
+        # tokenizer.pad_token = tokenizer.unk_token
     
     return model, tokenizer
 
@@ -87,7 +98,9 @@ def main():
 
     df1 = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/{model_name.replace('/','_')}/jailbreak_with_refusals.csv")
     df2 = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/ultrachat_10k_samples.csv")[:1000]
-    df = pd.concat([df1, df2])
+    # df = pd.concat([df1, df2])
+    df = pd.read_csv(f"/home/weisser/what_features_jailbreak_LLMs/datasets/finetune/{model_name.replace('/','_')}/jailbreak_with_answer1.csv")
+    df.golden_output = df.golden_output.astype(str)
     train_dataset_messages, eval_dataset_messages = prepare_dataset_to_messages(df)
     # train_dataset = train_dataset.select([1])
 
@@ -117,7 +130,7 @@ def main():
         save_strategy="steps",
         save_steps=100,
         report_to="wandb",
-        max_seq_length=1024,
+        max_seq_length=2048,
     )
 
     trainer = SFTTrainer(
