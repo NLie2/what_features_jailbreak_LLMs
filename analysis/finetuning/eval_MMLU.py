@@ -21,7 +21,7 @@ if specifier=="unfinetuned":
     os.makedirs(model_path, exist_ok=True)
     lora_weights_path = None
 else:
-    lora_weights_path = model_path
+    lora_weights_path = model_path+"/final_model"
     
 project_root = Path.cwd().parent.parent
 os.chdir(project_root)
@@ -31,8 +31,8 @@ os.makedirs(save_dir, exist_ok=True)
 fname = f"{save_dir}/MMLU.csv"
 if os.path.exists(fname):
     print(f"\n\nStage 3: Loading existing results from {fname}...\n")
-    df = pd.read_csv(fname)
-    if len(df)>0: print(f"MMLU: {df['MMLU_acc'].iloc[0]}")
+    summary_df = pd.read_csv(fname)
+    print(f"MMLU: {summary_df['MMLU_acc'].iloc[0]}")
 else:
     print("\n\nStage 3: Evaluating MMLU for jailbreak prompts...\n")
     mmlu_results = eval_MMLU(model_name, lora_weights_path)['results']['mmlu']['acc,none']

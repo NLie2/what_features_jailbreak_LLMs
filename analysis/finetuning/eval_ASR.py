@@ -22,7 +22,7 @@ if specifier=="unfinetuned":
     os.makedirs(model_path, exist_ok=True)
     lora_weights_path = None
 else:
-    lora_weights_path = model_path
+    lora_weights_path = model_path+"/final_model"
 
 project_root = Path.cwd().parent.parent
 os.chdir(project_root)
@@ -43,10 +43,12 @@ else:
 fname_stage2 = f"{save_dir}/jailbreak_prompts_val_rated.csv"
 if os.path.exists(fname_stage2):
     print(f"\n\nStage 2: Loading existing results from {fname_stage2}...\n")
-    df = pd.read_csv(fname_stage2)
+    df_val = pd.read_csv(fname_stage2)
     print(f"ASR: {(df[f'rating_output_text']=='Yes').mean()} = {(df[f'rating_output_text']=='Yes').sum()}/{len(df)}")
 else:
     print("\n\nStage 2: Grading responses for jailbreak prompts.\n")
+    # Important: Given that the jailbreak prompt is just an original prompt and the other column doesnt exist, we use jailbreak_prompt_text
+    # If original_prompt_text existed, we should use that
     df_val[f'rating_output_text'] = grade_with_HF_batched(df_val['jailbreak_prompt_text'], df_val[f'output_text'], batch_size=4)
     print(f"ASR : {(df_val[f'rating_output_text']=='Yes').mean()} = {(df_val[f'rating_output_text']=='Yes').sum()}/{len(df_val)}")
     print(f"\n\nStage 2: Saving results to {fname_stage2}.\n")
