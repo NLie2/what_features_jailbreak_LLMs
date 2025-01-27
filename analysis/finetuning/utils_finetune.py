@@ -22,7 +22,7 @@ def get_pad_token(model_id,tokenizer):
         "meta-llama/Llama-3.2-3B-Instruct": "<|finetune_right_pad_id|>", # 128004,
     }
     # pad_token = tokenizer.eos_token
-    pad_token = model_to_pad_token[model_id]
+    pad_token = model_to_pad_token.get(model_id, tokenizer.eos_token)
     return pad_token
 
 
@@ -94,8 +94,8 @@ def generate_responses_batched(model, tokenizer, prompts, batch_size=8, max_new_
                 **inputs,
                 max_new_tokens=max_new_tokens,
                 num_return_sequences=1,
-                # temperature=0.7,
-                # top_p=0.9,
+                temperature=None,
+                top_p=None,
                 # repetition_penalty=1.1,
                 do_sample=False,
                 pad_token_id=tokenizer.pad_token_id
