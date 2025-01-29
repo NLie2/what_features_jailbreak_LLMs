@@ -36,7 +36,7 @@ if os.path.exists(fname_stage1):
     df_train = pd.read_csv(fname_stage1)
 else:
     print("\n\nStage 1: Generating responses for jailbreak prompts.\n")
-    df_train[f'output_text'] = load_and_generate_responses_batched(model_name, lora_weights_path, df_train['jailbreak_prompt_text'], batch_size=16, max_new_tokens=1024)
+    df_train[f'output_text'] = load_and_generate_responses_batched(model_name, lora_weights_path, df_train['jailbreak_prompt_text'], batch_size=32, max_new_tokens=1024)
     print(f"\n\nStage 1: Saving results to {fname_stage1}...\n")
     df_train.to_csv(fname_stage1, index=False)
 
