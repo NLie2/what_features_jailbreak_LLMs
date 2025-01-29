@@ -44,7 +44,7 @@ fname_stage2 = f"{save_dir}/jailbreak_prompts_val_rated.csv"
 if os.path.exists(fname_stage2):
     print(f"\n\nStage 2: Loading existing results from {fname_stage2}...\n")
     df_val = pd.read_csv(fname_stage2)
-    print(f"ASR: {(df[f'rating_output_text']=='Yes').mean()} = {(df[f'rating_output_text']=='Yes').sum()}/{len(df)}")
+    print(f"ASR: {(df_val[f'rating_output_text']=='Yes').mean()} = {(df_val[f'rating_output_text']=='Yes').sum()}/{len(df_val)}")
 else:
     print("\n\nStage 2: Grading responses for jailbreak prompts.\n")
     # Important: Given that the jailbreak prompt is just an original prompt and the other column doesnt exist, we use jailbreak_prompt_text
