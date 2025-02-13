@@ -20,6 +20,9 @@ def get_pad_token(model_id,tokenizer):
         return tokenizer.pad_token
     model_to_pad_token = {
         "meta-llama/Llama-3.2-3B-Instruct": "<|finetune_right_pad_id|>", # 128004,
+        "google/gemma-7b-it": "<pad>",
+        "mistralai/Ministral-8B-Instruct-2410": "<pad>",
+        "meta-llama/Llama-3.1-8B-Instruct": "<|finetune_right_pad_id|>"
     }
     # pad_token = tokenizer.eos_token
     pad_token = model_to_pad_token.get(model_id, tokenizer.eos_token)
