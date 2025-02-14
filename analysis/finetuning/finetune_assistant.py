@@ -54,7 +54,7 @@ def get_model_and_tokenizer(model_id):
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         torch_dtype=torch.float16,
-        device_map="auto",
+        device_map="cuda:0", #"auto",
         trust_remote_code=True
     )
 
@@ -101,7 +101,7 @@ def save_training_args(training_args, lora_config):
     with open(os.path.join(output_dir, "lora_config.txt"), "w") as f:
         f.write(lora_config.__repr__())
 
-def proposed_response_template(model_name):
+def get_proposed_response_template(model_name):
     if model_name == "meta-llama/Llama-3.2-3B-Instruct":
         return "<|start_header_id|>assistant<|end_header_id|>"
     elif model_name == "google/gemma-7b-it":
@@ -115,7 +115,7 @@ def proposed_response_template(model_name):
 
 def main():
     # Model setup
-    model_name = "google/gemma-7b-it" #"meta-llama/Llama-3.2-3B-Instruct"
+    model_name = "google/gemma-7b-it" # "meta-llama/Llama-3.1-8B-Instruct" #"google/gemma-7b-it" #"mistralai/Ministral-8B-Instruct-2410" #"meta-llama/Llama-3.1-8B-Instruct"  #"meta-llama/Llama-3.2-3B-Instruct"
     specifier = 'baseline'
     model, tokenizer = get_model_and_tokenizer(model_name)
     model, lora_config = setup_lora_model(model)
@@ -131,10 +131,9 @@ def main():
     train_dataset_messages, eval_dataset_messages = prepare_dataset_to_messages(df)
     # train_dataset = train_dataset.select([1])
 
-
     # proposed_response_template = "<|im_start|>assistant\n"
     # proposed_response_template = "<|start_header_id|>assistant<|end_header_id|>" #\\n\\n"
-    proposed_response_template = proposed_response_template(model_name)
+    proposed_response_template = get_proposed_response_template(model_name)
     assert proposed_response_template in tokenizer.chat_template, f"The response template is not in the tokenizer's chat template. \n{proposed_response_template} \nnot in \n{tokenizer.chat_template}"
 
     # Create the data collator
@@ -144,10 +143,13 @@ def main():
         response_template=proposed_response_template
     )
 
+    MAX_SEQ_LENGTH = 1024 if model_name == "google/gemma-7b-it" else 2048 # for some reason gemma requires more CUDA memory than the other models. maybe 5% of examples are truncated. We mostly care about the beginning of the assistant response, so hopefully this is not a big deal. Maybe 1% of examples have more than 2048 tokens.
+    # MAX_SEQ_LENGTH = 2048
+
     training_args = SFTConfig(
         output_dir=f"./finetuned_models/{model_name.replace('/', '_')}_{specifier}",
         num_train_epochs=1,
-        per_device_train_batch_size=4,
+        per_device_train_batch_size=1,
         gradient_accumulation_steps=4,
         warmup_steps=50,
         learning_rate=5e-4,
@@ -158,7 +160,8 @@ def main():
         save_strategy="steps",
         save_steps=50,
         report_to="wandb",
-        max_seq_length=2048,
+        max_seq_length=MAX_SEQ_LENGTH,
+        gradient_checkpointing=True,
     )
 
     save_training_args(training_args, lora_config)
