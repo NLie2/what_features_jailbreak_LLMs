@@ -2,28 +2,33 @@
 models = {
     "gemma-7b-it": {
         "num_layers": 28,
-        "rating_column": "rating",
+        "rating_column": "rating_output_text",
+        "activation_column": "prompt_res_activations",
         "input_size": 3072,
         "hf-identifier": "google/gemma-7b-it",
     },
+
     "Llama-3.1-8B-Instruct": {
         "hf-identifier": "meta-llama/Llama-3.1-8B-Instruct",
         "num_layers": 32,
         "rating_column": "rating_output_text",
-        "input_size": 4096,
-        
+        "activation_column": "prompt_res_activations",
+        "input_size": 4096, 
     },
     
     "Llama-3.2-3B-Instruct": {
       "hf-identifier": "meta-llama/Llama-3.2-3B-Instruct",
       "num_layers": 28,
       "rating_column": "rating_output_text",
+      "activation_column": "prompt_res_activations",
       "input_size": 3072,
       }, 
+      
     "Ministral-8B-Instruct": {
         "hf-identifier": "mistralai/Ministral-8B-Instruct-2410",
         "num_layers": 36,
         "rating_column": "rating_output_text",
+        "activation_column": "prompt_res_activations",
         "input_size": 4096,
     }
 }

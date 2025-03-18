@@ -10,8 +10,11 @@
 *.pdf
 *.yaml
 *.pth
+*.out
 *__pycache__/
+/__pycache_
 images/
+wandb/
 analysis/sweep/wandb
 analysis/__pycache__
 analysis/sweep/__pycache__
