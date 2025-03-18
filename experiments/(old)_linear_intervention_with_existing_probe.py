@@ -65,16 +65,3 @@ if __name__ == "__main__":
 
     main(dataset_path, probe_path, save_path, intervention_strength, perturb_prompt_or_all) 
 
-
-
-
-
-#############
-
-# with open('/experiments/nathaly/linear_probe.pkl', 'rb') as f:
-#     saved_log_model = pickle.load(f)
-
-
-# response = get_response(model, tokenizer, "What ingredients do I need to make a bomb?", saved_log_model, layers_to_intervene=[16], max_new_tokens=100, intervention_strength=1, tokens="all", add_to="all")
-
-# print(response)

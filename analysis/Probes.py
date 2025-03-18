@@ -92,7 +92,7 @@ class SimpleMLP(nn.Module):
 
     def get_accuracy(self, test_data, test_labels, verbose = False):
       
-      print(len(test_data), len(test_labels))
+      # print(len(test_data), len(test_labels))
       device = next(self.parameters()).device
       
       X_test = self.scaler.transform(test_data) if hasattr(self.scaler, 'mean_') else test_data
@@ -100,7 +100,7 @@ class SimpleMLP(nn.Module):
       y_test = torch.tensor(test_labels, dtype=torch.float32).to(device)
 
       
-      print(len(X_test), len(y_test))
+      # print(len(X_test), len(y_test))
       self.eval()
       with torch.no_grad():
           y_pred = self(X_test)
@@ -205,8 +205,8 @@ class TransformerProbe(nn.Module):
         X_train = torch.tensor(X_train, dtype=torch.float32).cuda()
         y_train = torch.tensor(train_labels, dtype=torch.float32).cuda()
         
-        print(f"X_train shape: {X_train.shape}")
-        print(f"y_train shape: {y_train.shape}")
+        #print(f"X_train shape: {X_train.shape}")
+        #print(f"y_train shape: {y_train.shape}")
         
         criterion = nn.BCEWithLogitsLoss().cuda()
         optimizer = optim.AdamW(self.parameters(), lr=0.001)

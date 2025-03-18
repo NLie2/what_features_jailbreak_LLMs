@@ -174,6 +174,3 @@ def main():
 if __name__ == '__main__':
     main()
 
-# Example usage
-# df = pd.read_csv('path_to_your_dataframe.csv')
-# run_missing_capability_checks(df, 'your_model_name', 'path_to_base_directory') 

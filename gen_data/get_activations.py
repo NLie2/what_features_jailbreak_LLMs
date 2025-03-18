@@ -110,12 +110,25 @@ def get_res_activations(model,
       # also add model.generate and save the output 
       
       # set do_sample to True for stochastic output
-      output_sequence = model.generate(input_ids, attention_mask=inputs['attention_mask'], num_return_sequences=1, max_new_tokens=200, temperature = 0, do_sample=False, pad_token_id=tokenizer.eos_token_id )
+      output_sequence = model.generate(
+          input_ids, 
+          attention_mask=inputs['attention_mask'], 
+          num_return_sequences=1, 
+          max_new_tokens=200, 
+          temperature=0, 
+          do_sample=False,
+          pad_token_id=tokenizer.eos_token_id,
+          remove_prefix=True,  # Automatically remove the prompt prefix from generation
+          suppress_tokens=input_ids[0].tolist()  # Prevent the model from repeating input tokens
+      )
       
       generated_text = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
       
       # Check if the generated text starts with the input prompt
       if generated_text.startswith(prompt): generated_text = generated_text[len(prompt):].strip()
+      
+      # if prompt is in generated text, remove it
+      if prompt in generated_text: generated_text = generated_text.replace(prompt, "")
 
 
       return {'output_text': generated_text, type_of_activations : activations}

@@ -100,9 +100,13 @@ def split_dataset_by_jailbreak(df):
   return jailbreak_dfs
     
   
-def extract_layer(row, layer, activation_column= "prompt_res_activations"):
-    return row[activation_column][layer][0].cpu().numpy().flatten()
+# def extract_layer(row, layer, activation_column= "prompt_res_activations"):
+#     return row[activation_column][layer][0].cpu().numpy().flatten()
 
+def extract_layer(row, layer, activation_column="prompt_res_activations"):
+        activation = row[activation_column][layer][0]
+        # Average across the first dimension (4 heads) instead of flattening
+        return activation.mean(dim=0).cpu().numpy()  # This will give a (3072,) array
 
 def get_data_and_labels_multilayer(df, layers, split_idx = 0.8):
     """

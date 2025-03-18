@@ -1,3 +1,4 @@
+# NOT USING CHAT TEMPLATES 
 import argparse
 import pandas as pd
 from gen_data.get_activations import get_activations_from_df
