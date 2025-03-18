@@ -14,7 +14,7 @@ def get_response_linear(model,
                  prompt,
                  probe,
                  layers_to_intervene=None,  # Allow multiple layers
-                 max_new_tokens=15, 
+                 max_new_tokens=200, 
                  intervention_strength=1,
                  ):
     """
@@ -63,11 +63,26 @@ def get_response_linear(model,
         for h in hooks:
             h.remove()
     
-    generated_text = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
+    # generated_text = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
     
-    if generated_text.startswith(prompt): generated_text = generated_text[len(prompt):].strip()
+    # if generated_text.startswith(prompt): generated_text = generated_text[len(prompt):].strip()
 
-    return generated_text
+    # return generated_text
+        response = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
+    
+    # If outptut sequence repeats prompt, remove it 
+    # if generated_text.startswith(prompt): generated_text = generated_text[len(prompt):].strip()
+    # Extract response text
+    if "user\n" in response:
+            parts = response.split("user\n")
+            if len(parts) > 1:
+                response = parts[-1].split("\n", 1)
+                response = response[1].strip() if len(response) > 1 else response[0].strip()
+    else:
+            response = response[len(prompt):].strip() if response.startswith(prompt) else response
+            
+
+    return response   
 
 
 
@@ -102,9 +117,9 @@ def insert_linear_hook(model,
 def get_response_MLP(model, 
                  tokenizer,  
                  prompt,
-                 mlp,
+                 probe,
                  layers_to_intervene=None,  # Allow multiple layers
-                 max_new_tokens=15, 
+                 max_new_tokens=200, 
                  c = 0,
                  loss = "MSE",
                  nr_perturbations=32, 
@@ -128,6 +143,8 @@ def get_response_MLP(model,
     print(f"Using {loss} loss function")
     print("learning rate", learning_rate)
     print("nr_perturbations", nr_perturbations)
+    print("offensive", offensive)
+
     
     device = next(model.parameters()).device
     input_ids = tokenizer.encode(prompt, return_tensors='pt', truncation=True).to(device)
@@ -148,11 +165,11 @@ def get_response_MLP(model,
           with torch.enable_grad():
                       
             # Forward pass
-            feature_vector = output[0][:, :, :].requires_grad_().to(output[0].device)          
-            print("SHAPE", feature_vector.shape, feature_vector.requires_grad)  # Should print torch.Size([1, 768]) True
-            
+            #feature_vector = output[0][:, :, :].requires_grad_().to(output[0].device)          
+            #print("SHAPE", feature_vector.shape, feature_vector.requires_grad)  # Should print torch.Size([1, 768]) True
+            feature_vector = output.requires_grad_().to(output.device) if isinstance(output, torch.Tensor) else output[0].requires_grad_().to(output[0].device)                         
             ## check old predicted class
-            pred = mlp(feature_vector)
+            pred = probe(feature_vector)
             print("OLD MLP_out:", pred)
             
             ### 
@@ -166,7 +183,7 @@ def get_response_MLP(model,
               # Apply perturbation to the feature vector
               perturbed_vector = feature_vector + perturbation
 
-              mlp_out = mlp(perturbed_vector)
+              mlp_out = probe(perturbed_vector)
               
               mlp_out_value = mlp_out.item()
               
@@ -198,16 +215,23 @@ def get_response_MLP(model,
 
             ## check new predicted class
             # pred = mlp(perturbation)
-            pred = mlp(perturbed_vector)
+            pred = probe(perturbed_vector)
             print("NEW MLP_out:", pred)
             
             ### 
             
-            
-            new_out = perturbed_vector, output[1] # concat perturbed vector with the rest of the output
+            # print("output", output[1].shape)
+            # new_out = perturbed_vector, output[1] # concat perturbed vector with the rest of the output
 
             # returnn perturbation
-            return new_out
+            # return new_out
+            
+            if isinstance(output, torch.Tensor):
+                return perturbed_vector
+            else:
+                # Preserve the original structure if output was a tuple
+                print("tuple")
+                return (perturbed_vector,) + output[1:]
           
         return hook
 
@@ -231,12 +255,21 @@ def get_response_MLP(model,
         for h in hooks:
             h.remove()
     
-    generated_text = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
+    response = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
     
     # If outptut sequence repeats prompt, remove it 
-    if generated_text.startswith(prompt): generated_text = generated_text[len(prompt):].strip()
+    # if generated_text.startswith(prompt): generated_text = generated_text[len(prompt):].strip()
+            # Extract response text
+    if "user\n" in response:
+            parts = response.split("user\n")
+            if len(parts) > 1:
+                response = parts[-1].split("\n", 1)
+                response = response[1].strip() if len(response) > 1 else response[0].strip()
+    else:
+            response = response[len(prompt):].strip() if response.startswith(prompt) else response
+            
 
-    return generated_text                    
+    return response                    
   
 
 def insert_mlp_hook(model, 
@@ -248,22 +281,22 @@ def insert_mlp_hook(model,
                  c = 0):
     """
     """
+    print("offensive", offensive)
+
     if layers_to_intervene is None:
         layers_to_intervene = [17]  # Default to layer 17 if no layers specified
 
     criterion = nn.MSELoss()
     def mlp_intervene(name, c, offensive):
+      
         def hook(model, input, output):
-          
+                          
           with torch.enable_grad():
                       
             # Forward pass
-            feature_vector = output[0][:, :, :].requires_grad_().to(output[0].device)          
-            # print(feature_vector.shape, feature_vector.requires_grad)  # Should print torch.Size([1, 768]) True
-            
-            # print("OLD MLP_out:", mlp(feature_vector)) ## check old predicted class
-                      
-                    
+            # feature_vector = output[0][:, :, :].requires_grad_().to(output[0].device)
+            feature_vector = output.requires_grad_().to(output.device) if isinstance(output, torch.Tensor) else output[0].requires_grad_().to(output[0].device)
+   
             # Define perturbation as a parameter or tensor that requires gradient
             perturbation = torch.zeros_like(feature_vector, requires_grad=True).to(feature_vector.device)
             
@@ -279,6 +312,7 @@ def insert_mlp_hook(model,
               
               # target_out = torch.zeros_like(mlp_out)  # Default to zero, or choose an appropriate value
               if offensive:
+            
                   # target = mlp_out_value + c
                   target = max(mlp_out_value+c, c) # if out is very negative, target is c
 
@@ -311,10 +345,15 @@ def insert_mlp_hook(model,
             del grad_input, mlp_out, loss
             torch.cuda.empty_cache()
                     
-            new_out = perturbed_vector, output[1] # concat perturbed vector with the rest of the output
+            # new_out = perturbed_vector, output[1] # concat perturbed vector with the rest of the output
+            # return new_out
+            if isinstance(output, torch.Tensor):
+                return perturbed_vector
+            else:
+                # Preserve the original structure if output was a tuple
+                return (perturbed_vector,) + output[1:]
 
-            # returnn perturbation
-            return new_out
+
           
         return hook
 
@@ -336,7 +375,7 @@ def get_response_transformer(model,
                            prompt,
                            probe,
                            layers_to_intervene=None,
-                           max_new_tokens=15, 
+                           max_new_tokens=200, 
                            c=0,
                            loss="MSE",
                            nr_perturbations=32, 
@@ -348,6 +387,7 @@ def get_response_transformer(model,
     print(f"Using {loss} loss function")
     print("learning rate", learning_rate)
     print("nr_perturbations", nr_perturbations)
+    print("offensive", offensive)
     
     device = next(model.parameters()).device
     input_ids = tokenizer.encode(prompt, return_tensors='pt', truncation=True).to(device)
@@ -361,13 +401,17 @@ def get_response_transformer(model,
     
 
     def transformer_intervene(name, c, offensive):
-        def hook(model, input, output):
+        def hook(model, input, output):                                
             with torch.enable_grad():
                 # Get feature vector and ensure it's on the right device
                 print(output[0].shape)
                 output_modified = output[0].clone()
 
-                feature_vector = output[0][:, -1, :].requires_grad_().to(output[0].device)
+                # feature_vector = output[0][:, -1, :].requires_grad_().to(output[0].device)
+                # Forward pass
+                # feature_vector = output[0][:, :, :].requires_grad_().to(output[0].device)
+                feature_vector = output[:, -1, :].requires_grad_().to(output.device) if isinstance(output, torch.Tensor) else output[0][:, -1, :].requires_grad_().to(output[0].device)
+                print("SHAPE", feature_vector.shape, feature_vector.requires_grad)  
 
                 print(feature_vector.shape, feature_vector.requires_grad)  # Should print torch.Size([1, 1, input_size]), True
 
@@ -420,10 +464,15 @@ def get_response_transformer(model,
                 
                 
                 output_modified[:, -1, :] = perturbed_vector
-                new_out = output_modified, output[1]
-                print(new_out[0].shape)
+                # new_out = output_modified , output[1]
+                # print(new_out[0].shape)
                 
-                return new_out            
+                # return new_out 
+                if isinstance(output, torch.Tensor):
+                    return output_modified
+                else:
+                    # Preserve the original structure if output was a tuple
+                    return (output_modified,) + output[1:]                       
         return hook
 
     layers_to_enum = get_res_layers_to_enumerate(model)
@@ -453,13 +502,28 @@ def get_response_transformer(model,
         for h in hooks:
             h.remove()
     
-    generated_text = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
+    # generated_text = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
     
-    # Remove prompt from output if present
-    if generated_text.startswith(prompt):
-        generated_text = generated_text[len(prompt):].strip()
+    # # Remove prompt from output if present
+    # if generated_text.startswith(prompt):
+    #     generated_text = generated_text[len(prompt):].strip()
 
-    return generated_text
+    # return generated_text
+    response = tokenizer.decode(output_sequence[0], skip_special_tokens=True)
+    
+    # If outptut sequence repeats prompt, remove it 
+    # if generated_text.startswith(prompt): generated_text = generated_text[len(prompt):].strip()
+            # Extract response text
+    if "user\n" in response:
+            parts = response.split("user\n")
+            if len(parts) > 1:
+                response = parts[-1].split("\n", 1)
+                response = response[1].strip() if len(response) > 1 else response[0].strip()
+    else:
+            response = response[len(prompt):].strip() if response.startswith(prompt) else response
+            
+
+    return response   
  
 def insert_transformer_hook(model, 
                  probe,
@@ -480,7 +544,9 @@ def insert_transformer_hook(model,
                 # Get feature vector and ensure it's on the right device
                 output_modified = output[0].clone()
 
-                feature_vector = output[0][:, -1, :].requires_grad_().to(output[0].device)
+                # feature_vector = output[0][:, -1, :].requires_grad_().to(output[0].device)
+                feature_vector = output[:, -1, :].requires_grad_().to(output.device) if isinstance(output, torch.Tensor) else output[0][:, -1, :].requires_grad_().to(output[0].device)
+
 
                 # print(feature_vector.shape, feature_vector.requires_grad)  # Should print torch.Size([1, 1, input_size]), True
 
@@ -521,10 +587,23 @@ def insert_transformer_hook(model,
                 # print("NEW Transformer_out:", probe(perturbed_vector).item()) # Final prediction check
                 
                 
-                output_modified[:, -1, :] = perturbed_vector
-                new_out = output_modified, output[1]
+                # output_modified[:, -1, :] = perturbed_vector
+                # new_out = output_modified, output[1]
                 
-                return new_out            
+                # return new_out       
+              
+              
+                output_modified[:, -1, :] = perturbed_vector
+                # new_out = output_modified , output[1]
+                # print(new_out[0].shape)
+                
+                # return new_out 
+                if isinstance(output, torch.Tensor):
+                    return output_modified
+                else:
+                    # Preserve the original structure if output was a tuple
+                    return (output_modified,) + output[1:]   
+                       
         return hook
 
     layers_to_enum = get_res_layers_to_enumerate(model)

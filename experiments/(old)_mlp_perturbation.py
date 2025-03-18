@@ -24,7 +24,7 @@ model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda")
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
-probe_path = "/data/nathalie_maria_kirch/ERA_Fellowship/datasets/Probes/gemma-7b-it/mlp_probe_weights.pth"
+probe_path = ""
 
 
 # Load validation data
@@ -249,7 +249,7 @@ mlp.to("cuda")
 
 # df = pd.read_pickle("/datasets/latest/validation_data.pkl")
 
-df = pd.read_pickle("/data/nathalie_maria_kirch/ERA_Fellowship/datasets/haize/jailbreak_prompts_nathalie_cas_haize_1.pkl")
+df = pd.read_pickle("")
 
 c = 1.5
 lr = 0.005
@@ -261,7 +261,7 @@ for index, row in df.iterrows():
     print(response)
 
 
-path = f"/data/nathalie_maria_kirch/ERA_Fellowship/datasets/gemma-7b-it/haize/harmful/defensive_mlp_intervention_c={c}_lr={lr}_nr_p={nr_perturbations}.pkl"
+path = "root" / f"defensive_mlp_intervention_c={c}_lr={lr}_nr_p={nr_perturbations}.pkl"
 df.to_pickle(path)
 
 print(path)

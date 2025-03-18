@@ -1,7 +1,11 @@
 import argparse
 import pandas as pd
-from gen_data.get_activations import get_activations_from_df
+from gen_data.get_activations_new import get_activations_from_df
 from pathlib import Path
+import sys
+
+# Import paths module from the experiments directory
+from experiments.paths import PROJECT_ROOT, DATASETS_DIR
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description="Process model activations.")
@@ -11,10 +15,8 @@ args = parser.parse_args()
 # Assign the parsed model name
 model_name = args.model_name
 
-# Define paths
-notebook_dir = Path.cwd()
-project_root = notebook_dir.parent
-data = pd.read_pickle(project_root / "datasets/jailbreak_success.pkl")
+# Load the data using the PROJECT_ROOT path
+data = pd.read_pickle(DATASETS_DIR / "jailbreak_success.pkl")
 
 # Generate activations
 path = get_activations_from_df(
@@ -24,6 +26,7 @@ path = get_activations_from_df(
     token_position="last",
     generate_output=True,
     type_of_activations="prompt_res_activations"
+    
 )
 
 print(f"Generated activations saved at: {path}")

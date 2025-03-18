@@ -1,20 +1,16 @@
+# NOT USING CHAT TEMPLATES 
+
+from experiments.paths import PROJECT_ROOT
+
 import pandas as pd
 import sys
 import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
+import os 
 
 
 from pathlib import Path
-
-# Get the current working directory (where the notebook is)
-notebook_dir = Path.cwd()
-
-# Move up to the root directory (parent of 'notebooks')
-project_root = notebook_dir.parent
-
-
-sys.path.append(notebook_dir.parent)
 
 from analysis.supervised import *
 from analysis.causal_interventions import *
@@ -25,12 +21,14 @@ from analysis.models import *
 
 def main(dataset_path, model_name):
     if ".csv" in dataset_path:
-      df = pd.read_csv(dataset_path)
+      df = pd.read_csv(str(dataset_path))
     elif ".pkl" in dataset_path:
-      df = pd.read_pickle(dataset_path)
+      df = pd.read_pickle(str(dataset_path))
       
 
-    model_name, _, _, hf_ident = get_model_details(model_name)
+    model_name, num_layers, rating_column, hf_ident, input_size  =  get_model_details(model_name)
+    model = AutoModelForCausalLM.from_pretrained(hf_ident)
+    tokenizer = AutoTokenizer.from_pretrained(hf_ident)
     
     print("Model name: ", model_name)
 
@@ -41,15 +39,20 @@ def main(dataset_path, model_name):
     if "benign" in str(dataset_path): 
       harmful_harmless = "harmless"
     
-    filename = f"datasets/{model_name}/haize/{harmful_harmless}/no_intervention_control.pkl"
-    save_path = project_root / filename
+    filename = PROJECT_ROOT / f"/datasets/{model_name}/final/{harmful_harmless}/no_intervention_control.pkl"
+    save_path = filename
+    # save_path = str(project_root / filename)
 
-    rated_save_path  = project_root / filename.replace(".pkl", "_rated.pkl")
+    # rated_save_path  = str(project_root / filename.replace(".pkl", "_rated.pkl"))
+    rated_save_path = filename.replace(".pkl", "_rated.pkl")
+    
+    print("save path: ", str(save_path))
     
     
-    
-    model = AutoModelForCausalLM.from_pretrained(hf_ident)
-    tokenizer = AutoTokenizer.from_pretrained(hf_ident)
+    # tokenizer = AutoTokenizer.from_pretrained(hf_ident)
+    # model = AutoModel.from_pretrained(hf_ident, torch_dtype=torch.float16, device_map="auto")
+
+    print("model loaded")
     
     model.to("cuda")   
     
@@ -63,7 +66,7 @@ def main(dataset_path, model_name):
       
       input_ids = tokenizer(prompt, return_tensors="pt").to("cuda")
 
-      outputs = model.generate(**input_ids, max_new_tokens=200)
+      outputs = model.generate(**input_ids, max_new_tokens=200, do_sample=False)
 
       response = tokenizer.decode(outputs[0])
       
