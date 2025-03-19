@@ -1,6 +1,12 @@
+analysis/finetuning/finetuned_models/*
+analysis/finetuning/final_model/*
+analysis/finetuning/wandb/*
+
+
 *.ipynb
 !analysis/notebooks/*.ipynb
 !gen_data/get_dataset.ipynb
+!analysis/finetuning/*.ipynb
 *.env
 *.pkl
 *.csv
@@ -29,3 +35,5 @@ analysis/check_asrs
 analysis/figure_generation
 logs/
 datasets/
+.env
+__pycache__/
