@@ -20,6 +20,7 @@ analysis/finetuning/wandb/*
 *.sh
 *__pycache__/
 /__pycache_
+finetuned_models/
 images/
 wandb/
 analysis/sweep/wandb
