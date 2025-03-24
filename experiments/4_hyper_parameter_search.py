@@ -103,7 +103,7 @@ def get_baseline(model, model_name, tokenizer, harmful, autograder, autogr_token
     print("get baseline...")
     
     # Create the directory path
-    base_path = project_root / f"datasets/{publication}/{model_name}/intervention/harmful_{single}/"
+    base_path = PROJECT_ROOT / f"datasets/{publication}/{model_name}/intervention/harmful_{single}/"
     base_path.mkdir(parents=True, exist_ok=True)
     
     if f"no_intervention_control_rated.pkl" in os.listdir(base_path):
